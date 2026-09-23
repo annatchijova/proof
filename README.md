@@ -1,5 +1,9 @@
 # PROOF
 
+<p align="center">
+  <img src="visual/logo.png" alt="PROOF logo" width="240">
+</p>
+
 **English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Install](INSTALL.md) | [Product Validation](docs/PRODUCT_VALIDATION.md)
 
 ## The problem
@@ -37,6 +41,18 @@ verdict.
 ```
 
 PROOF does not look at screenshots. It looks at the ledger.
+
+```mermaid
+flowchart LR
+    A[Payment claim] --> B[Stellar ledger]
+    B --> C[Extract evidence]
+    C --> D[Adjudicate claim]
+    D --> E{Verdict}
+    E --> F[VERIFIED]
+    E --> G[NOT_VERIFIED]
+    E --> H[INSUFFICIENT_EVIDENCE]
+    D --> I[SHA-256 sealed bundle]
+```
 
 ## Observable behavior
 
@@ -238,3 +254,20 @@ verification against real Testnet transactions.
 
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md).
+
+## Screenshots
+
+![PROOF screenshot 1](visual/Screenshot%20from%202026-09-23%2000-55-00.png)
+![PROOF screenshot 2](visual/Screenshot%20from%202026-09-23%2000-55-03.png)
+![PROOF screenshot 3](visual/Screenshot%20from%202026-09-23%2000-55-06.png)
+![PROOF screenshot 4](visual/Screenshot%20from%202026-09-23%2000-55-15.png)
+![PROOF screenshot 5](visual/Screenshot%20from%202026-09-23%2000-55-18.png)
+![PROOF screenshot 6](visual/Screenshot%20from%202026-09-23%2001-00-36.png)
+![PROOF screenshot 7](visual/Screenshot%20from%202026-09-23%2001-00-45.png)
+![PROOF screenshot 8](visual/Screenshot%20from%202026-09-23%2001-00-51.png)
+![PROOF screenshot 9](visual/Screenshot%20from%202026-09-23%2001-00-56.png)
+![PROOF screenshot 10](visual/Screenshot%20from%202026-09-23%2001-00-59.png)
+![PROOF screenshot 11](visual/Screenshot%20from%202026-09-23%2001-01-06.png)
+![PROOF screenshot 12](visual/Screenshot%20from%202026-09-23%2001-01-10.png)
+![PROOF screenshot 13](visual/Screenshot%20from%202026-09-23%2001-01-16.png)
+![PROOF screenshot 14](visual/Screenshot%20from%202026-09-23%2001-01-20.png)

@@ -1,5 +1,9 @@
 # PROOF
 
+<p align="center">
+  <img src="visual/logo.png" alt="Logo de PROOF" width="240">
+</p>
+
 [Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md)
 
 ## El problema
@@ -37,6 +41,18 @@ con un veredicto.
 ```
 
 PROOF no mira capturas. Mira el ledger.
+
+```mermaid
+flowchart LR
+    A[Payment claim] --> B[Ledger de Stellar]
+    B --> C[Extraer evidencia]
+    C --> D[Adjudicar claim]
+    D --> E{Veredicto}
+    E --> F[VERIFIED]
+    E --> G[NOT_VERIFIED]
+    E --> H[INSUFFICIENT_EVIDENCE]
+    D --> I[Bundle sellado con SHA-256]
+```
 
 ## Comportamiento observable
 
@@ -241,3 +257,20 @@ verificación adversarial contra transacciones reales de Testnet.
 
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
 ver el [Technical README](TECHNICAL.md).
+
+## Screenshots
+
+![Screenshot de PROOF 1](visual/Screenshot%20from%202026-09-23%2000-55-00.png)
+![Screenshot de PROOF 2](visual/Screenshot%20from%202026-09-23%2000-55-03.png)
+![Screenshot de PROOF 3](visual/Screenshot%20from%202026-09-23%2000-55-06.png)
+![Screenshot de PROOF 4](visual/Screenshot%20from%202026-09-23%2000-55-15.png)
+![Screenshot de PROOF 5](visual/Screenshot%20from%202026-09-23%2000-55-18.png)
+![Screenshot de PROOF 6](visual/Screenshot%20from%202026-09-23%2001-00-36.png)
+![Screenshot de PROOF 7](visual/Screenshot%20from%202026-09-23%2001-00-45.png)
+![Screenshot de PROOF 8](visual/Screenshot%20from%202026-09-23%2001-00-51.png)
+![Screenshot de PROOF 9](visual/Screenshot%20from%202026-09-23%2001-00-56.png)
+![Screenshot de PROOF 10](visual/Screenshot%20from%202026-09-23%2001-00-59.png)
+![Screenshot de PROOF 11](visual/Screenshot%20from%202026-09-23%2001-01-06.png)
+![Screenshot de PROOF 12](visual/Screenshot%20from%202026-09-23%2001-01-10.png)
+![Screenshot de PROOF 13](visual/Screenshot%20from%202026-09-23%2001-01-16.png)
+![Screenshot de PROOF 14](visual/Screenshot%20from%202026-09-23%2001-01-20.png)

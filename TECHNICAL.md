@@ -1,31 +1,54 @@
 # PROOF — Technical README
 
+<p align="center">
+  <img src="visual/logo.png" alt="PROOF logo" width="240">
+</p>
+
 Architecture, threat model, design decisions, and invariants.
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    subgraph Boundary[Input and transport boundaries]
+        Claim[PaymentClaim\ntransaction hash + optional assertions]
+        API[FastAPI /verify\nMCP tools]
+        Network{Network\ntestnet or mainnet}
+    end
+
+    Claim --> API
+    API --> Network
+    Network --> Client[StellarClient\nfetch transaction, operations, effects]
+    Client --> Horizon[(Horizon API)]
+    Horizon --> Client
+
+    Client --> Extract[extractor.extract_evidence\nvalidate and reconstruct facts]
+    Extract --> Evidence[PaymentEvidence\ninteger stroops, memo, operations]
+    Evidence --> Adjudicate[adjudicator.adjudicate\nPASS / FAIL / ABSTAIN]
+    Claim --> Adjudicate
+
+    Claim -. optional commitment_tx_hash .-> Commitment[commitment_extractor\nmanage_data commitment]
+    Client -. fetch commitment tx .-> Commitment
+    Commitment --> Adjudicate
+
+    Adjudicate --> Verdict[compute_verdict\nVERIFIED / NOT_VERIFIED / INSUFFICIENT_EVIDENCE]
+    Verdict --> Bundle[EvidenceBundle\nsealed payload + chain of custody]
+    Bundle --> Canonical[canonicalize\ntyped, ordered, versioned bytes]
+    Canonical --> Seal[SHA-256 seal]
+    Seal --> Bundle
+
+    Bundle --> Verify[verifier.verify_bundle\nindependent re-seal and consistency check]
+    Bundle --> Receipt[issue_receipt\noptional on-chain receipt]
+    Receipt --> Soroban[(Soroban proof registry)]
+
+    Claim -. dispute claims .-> Dispute[dispute.adjudicate_dispute\ncontradiction analysis]
+    Evidence -. evidence sets .-> Dispute
+    Dispute --> DisputeResult[DisputeResult]
 ```
-PaymentClaim (transaction_hash + optional assertions)
-    |
-    v
-StellarClient.fetch_transaction() --- Horizon API (testnet/mainnet)
-StellarClient.fetch_operations()
-    |
-    v
-extractor.extract_evidence() --- validate + reconstruct PaymentEvidence
-    |
-    v
-adjudicator.adjudicate() --- compare each claim proposition vs evidence
-    |
-    v
-adjudicator.compute_verdict() --- VERIFIED / NOT_VERIFIED / INSUFFICIENT
-    |
-    v
-EvidenceBundle.build() --- canonicalize + SHA-256 seal
-    |
-    v
-verifier.verify_bundle() --- independent re-seal + consistency check
-```
+
+The technical flow is intentionally fail-closed: any fetch or extraction
+error terminates in `INSUFFICIENT_EVIDENCE`; only a complete set of passing
+applicable checks can produce `VERIFIED`.
 
 ## Data model
 
@@ -512,3 +535,20 @@ Frozen components:
   on public deployment)
 - MCP tools: 8 tools (4 verification, 4 Soroban)
 - Test suite: 161 tests, 0 skipped
+
+## Screenshots
+
+![PROOF screenshot 1](visual/Screenshot%20from%202026-09-23%2000-55-00.png)
+![PROOF screenshot 2](visual/Screenshot%20from%202026-09-23%2000-55-03.png)
+![PROOF screenshot 3](visual/Screenshot%20from%202026-09-23%2000-55-06.png)
+![PROOF screenshot 4](visual/Screenshot%20from%202026-09-23%2000-55-15.png)
+![PROOF screenshot 5](visual/Screenshot%20from%202026-09-23%2000-55-18.png)
+![PROOF screenshot 6](visual/Screenshot%20from%202026-09-23%2001-00-36.png)
+![PROOF screenshot 7](visual/Screenshot%20from%202026-09-23%2001-00-45.png)
+![PROOF screenshot 8](visual/Screenshot%20from%202026-09-23%2001-00-51.png)
+![PROOF screenshot 9](visual/Screenshot%20from%202026-09-23%2001-00-56.png)
+![PROOF screenshot 10](visual/Screenshot%20from%202026-09-23%2001-00-59.png)
+![PROOF screenshot 11](visual/Screenshot%20from%202026-09-23%2001-01-06.png)
+![PROOF screenshot 12](visual/Screenshot%20from%202026-09-23%2001-01-10.png)
+![PROOF screenshot 13](visual/Screenshot%20from%202026-09-23%2001-01-16.png)
+![PROOF screenshot 14](visual/Screenshot%20from%202026-09-23%2001-01-20.png)
