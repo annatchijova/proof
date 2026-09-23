@@ -100,9 +100,9 @@ primero. No abras issues públicos para bugs de seguridad.
 1. Forkeá el repositorio
 2. Creá una branch con un nombre descriptivo
 3. Corré la suite completa antes de subir: `pytest tests/ -v`
-4. Cero regresiones son aceptables. Si tu patch introduce una
-   regresión, explicá por qué en la descripción del PR y cuál es el
-   tradeoff
+4. Las regresiones no son aceptables. Si tu patch introduce una
+   regresión, requiere justificación explícita, evidencia, y
+   aprobación de la mantenedora en la descripción del PR.
 5. Todo código nuevo que toque el decision path del veredicto debe
    incluir un test de determinismo — input idéntico debe producir
    output idéntico

@@ -100,9 +100,9 @@ Do not open public issues for security bugs.
 1. Fork the repository
 2. Create a branch with a descriptive name
 3. Run the full test suite before submitting: `pytest tests/ -v`
-4. Zero regressions are acceptable. If your patch introduces a
-   regression, explain why in the PR description and what the tradeoff
-   is
+4. Regressions are not acceptable. If your patch introduces a
+   regression, it requires explicit justification, evidence, and
+   maintainer approval in the PR description.
 5. All new code touching the verdict decision path must include a
    determinism test — identical input must produce identical output
 6. If your contribution modifies verdict logic, include a

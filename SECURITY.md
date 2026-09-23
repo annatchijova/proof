@@ -33,9 +33,12 @@ observed vs. expected output.
   man-in-the-middle. PROOF is only as trustworthy as its Horizon
   connection. There is no TLS certificate pinning (Finding 3, red-team
   review).
-- **Network failures:** transient errors produce INSUFFICIENT_EVIDENCE,
-  not an error. This is fail-closed but can mislead users into thinking
-  a transaction does not exist when the network is down.
+- **Network failures:** transient errors produce INSUFFICIENT_EVIDENCE
+  with a distinct reason (`"Network error fetching transaction: ..."`),
+  not the generic `"Transaction not found on the ledger."` message used
+  for a genuine 404. The two cases are distinguished at the boundary
+  (`fetch_transaction` returns `None` for 404, raises
+  `StellarFetchError` for network failures — Finding 2, fixed).
 - **Legal disputes:** PROOF does not adjudicate contractual
   obligations. A VERIFIED verdict means the ledger shows a matching
   payment — not that a debt was legally satisfied.
