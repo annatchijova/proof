@@ -80,12 +80,13 @@ proof/
   claim.py           # PaymentClaim — what someone asserts happened (incl. commitment_tx_hash)
   commitment.py      # CommitmentTerms, PaymentCommitment, Receipt — on-chain commitments
   commitment_extractor.py  # extract commitment from manage_data operations
+  dispute.py         # DisputeResult, adjudicate_dispute, find_contradictions — L5 disputes
   evidence.py        # PaymentEvidence, PaymentOperation, CheckResult, EvidenceBundle
   stellar_client.py  # Horizon API wrapper (testnet + mainnet, fetches tx/ops/effects)
   extractor.py       # reconstruct evidence from tx + operations + effects (L3: multi-op, path payments)
   adjudicator.py     # compare claim vs evidence (+ optional commitment), produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
-  engine.py          # main entry point: verify_payment(claim, network) + issue_receipt(bundle)
+  engine.py          # main entry points: verify_payment, verify_dispute, issue_receipt
 ```
 
 ## Commit conventions

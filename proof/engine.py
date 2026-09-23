@@ -36,6 +36,7 @@ from .adjudicator import adjudicate, adjudicate_with_commitment, compute_verdict
 from .claim import PaymentClaim
 from .commitment import PaymentCommitment, Receipt
 from .commitment_extractor import CommitmentExtractionError, extract_commitment
+from .dispute import DisputeResult, adjudicate_dispute
 from .evidence import (
     INSUFFICIENT_EVIDENCE,
     EvidenceBundle,
@@ -44,7 +45,7 @@ from .evidence import (
 from .extractor import ExtractionError, extract_evidence
 from .stellar_client import StellarClient
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 
 def verify_payment(
@@ -185,3 +186,52 @@ def _insufficient_evidence_bundle(
         verdict=INSUFFICIENT_EVIDENCE,
         chain_of_custody=chain_of_custody,
     )
+
+
+def _fetch_evidence_for_claim(
+    client: StellarClient,
+    tx_hash: str,
+) -> PaymentEvidence | None:
+    """Fetch and extract evidence for a single transaction.
+
+    Returns None if the transaction is not found or extraction fails.
+    """
+    tx_data = client.fetch_transaction(tx_hash)
+    if tx_data is None:
+        return None
+    operations = client.fetch_operations(tx_hash)
+    if not operations:
+        return None
+    effects = client.fetch_effects(tx_hash)
+    try:
+        return extract_evidence(tx_data, operations, effects)
+    except ExtractionError:
+        return None
+
+
+def verify_dispute(
+    claim_a: PaymentClaim,
+    claim_b: PaymentClaim,
+    network: str = "testnet",
+) -> DisputeResult:
+    """Verify a dispute between two contradictory payment claims.
+
+    Each claim is verified independently against the ledger. Then the
+    evidence sets are compared for contradictions.
+
+    Args:
+        claim_a: The first claim (e.g., "I paid Bob 100 USDC").
+        claim_b: The second claim (e.g., "I never received anything from Alice").
+        network: "testnet" or "mainnet".
+
+    Returns:
+        A DisputeResult with the verdicts for each claim and the dispute verdict.
+    """
+    client = StellarClient(network=network)
+    try:
+        evidence_a = _fetch_evidence_for_claim(client, claim_a.transaction_hash)
+        evidence_b = _fetch_evidence_for_claim(client, claim_b.transaction_hash)
+    finally:
+        client.close()
+
+    return adjudicate_dispute(claim_a, evidence_a, claim_b, evidence_b)

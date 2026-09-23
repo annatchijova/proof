@@ -269,6 +269,58 @@ tamper-evident (can't change after the transaction is on the ledger).
   integration (Soroban) is a future enhancement.
 - **No API/MCP server:** L6 will expose verification as an API.
 
+## L5: Disputes and contradictory states
+
+L5 adds the ability to adjudicate disputes between two contradictory
+payment claims. Each claim is verified independently against the ledger,
+then the evidence sets are compared for contradictions.
+
+### Dispute scenarios
+
+1. **Same transaction, different claims:** Alice says "I paid Bob 100 USDC
+   for INV-184." Bob says "I received 50 USDC from Alice." Both reference
+   the same transaction. PROOF verifies each claim and checks that the
+   evidence sets are consistent (they should be, since they come from the
+   same ledger data).
+
+2. **Different transactions, same reference:** Alice says "tx A pays for
+   INV-184." Bob says "tx B pays for INV-184." Both can't be right — only
+   one payment can satisfy an invoice. PROOF detects the reference
+   collision across different transactions.
+
+3. **One claim verified, one not:** Alice's claim verifies against the
+   ledger, Bob's doesn't. PROOF reports CLAIM_A_VERIFIED.
+
+4. **Contradictory evidence:** Two evidence sets that should be identical
+   (same transaction) differ in fields. This indicates tampering or
+   reconstruction error. PROOF reports CONTRADICTION.
+
+### Dispute verdicts
+
+| Verdict | Meaning |
+|---|---|
+| `CLAIM_A_VERIFIED` | Claim A is verified, claim B is not |
+| `CLAIM_B_VERIFIED` | Claim B is verified, claim A is not |
+| `BOTH_VERIFIED` | Both claims are verified (not contradictory) |
+| `NEITHER_VERIFIED` | Neither claim is verified |
+| `CONTRADICTION` | Evidence sets contain contradictions |
+
+Contradiction dominates: if contradictions are found, the dispute verdict
+is CONTRADICTION regardless of individual claim verdicts.
+
+### What L5 does not do
+
+- PROOF does not determine who is "telling the truth" in a human sense.
+- PROOF does not adjudicate legal disputes or contractual obligations.
+- PROOF only reports what the ledger can establish about each claim and
+  whether the evidence sets are mutually consistent.
+
+## Known limitations (L5)
+
+- **No on-chain dispute resolution:** L5 is off-chain analysis only. A
+  future Soroban contract could store dispute results on-chain.
+- **No API/MCP server:** L6 will expose verification as an API.
+
 ## Falsifiers
 
 - **Determinism claim:** if two runs of the same claim + evidence produce

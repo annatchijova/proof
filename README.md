@@ -124,7 +124,7 @@ proof/
   adjudicator.py     # compare claim vs evidence, produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
   engine.py          # main entry point: verify_payment(claim, network)
-tests/               # 109 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment
+tests/               # 124 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute
 ```
 
 ## Try it
@@ -153,10 +153,10 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-109 tests covering: canonical serialization, claim validation, adjudication
+124 tests covering: canonical serialization, claim validation, adjudication
 logic, tamper detection, determinism, multi-operation extraction, path
 payments, account merge, memo type classification, commitment hashing,
-commitment adjudication, and receipt issuance.
+commitment adjudication, receipt issuance, and dispute resolution.
 
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md).

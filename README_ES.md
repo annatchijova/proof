@@ -125,7 +125,7 @@ proof/
   adjudicator.py     # comparar claim vs evidencia, producir checks + veredicto
   verifier.py        # verificador independiente de bundles (solo stdlib)
   engine.py          # entry point: verify_payment(claim, network)
-tests/               # 109 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment
+tests/               # 124 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute
 ```
 
 ## Probalo
@@ -153,11 +153,11 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-109 tests cubriendo: serialización canónica, validación de claims,
+124 tests cubriendo: serialización canónica, validación de claims,
 lógica de adjudicación, detección de alteraciones, determinismo,
 extracción multi-operación, path payments, account merge,
 clasificación de memo types, hashing de commitments, adjudicación de
-commitments, y emisión de receipts.
+commitments, emisión de receipts, y resolución de disputas.
 
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
 ver el [Technical README](TECHNICAL.md).
