@@ -1,6 +1,6 @@
 # PROOF Red Team Review
 
-**Date:** 2026-06-04
+**Date:** 2026-09-22
 **Scope:** Full system (L1-L6 + Soroban contract)
 **Reviewer:** Adversarial audit of the PROOF codebase
 **Method:** Peircean abductive loop — for each finding, formulate the

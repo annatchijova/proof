@@ -121,7 +121,7 @@ These are documented as open, not as resolved:
 
 ## Red-team review
 
-A full red-team review was conducted on 2026-06-04. The review found
+A full red-team review was conducted on 2026-09-22. The review found
 no critical vulnerabilities that would allow a false VERIFIED verdict.
 7 findings were reported; 6 code findings were fixed, 1 (API auth) is
 documented as a known limitation.
@@ -133,4 +133,4 @@ report.
 
 | Date | Auditor | Result |
 |------|---------|--------|
-| 2026-06-04 | Adversarial red-team review | 7 findings (6 fixed, 1 documented) |
+| 2026-09-22 | Adversarial red-team review | 7 findings (6 fixed, 1 documented) |
