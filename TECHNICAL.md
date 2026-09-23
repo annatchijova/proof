@@ -201,10 +201,19 @@ meaningfully — those produce ABSTAIN.
 - **Source asset claims:** the `PaymentClaim` does not yet have a
   `source_asset_code` field. Path payment source assets are extracted and
   reported in the evidence, but the adjudicator ABSTAINs on source asset
-  matching. Adding source asset assertions to claims is L4.
-- **No on-chain receipts:** L4 will add Stellar contract-based receipt
-  registration.
-- **No API/MCP server:** L6 will expose verification as an API.
+  matching. Adding source asset assertions to claims is a future
+  enhancement.
+
+## Milestone history (L3)
+
+The following were L3 limitations that have since been resolved by
+later levels. They are recorded here as architectural history, not as
+current limitations:
+
+- **On-chain receipts** (resolved by L4): L3 had no on-chain receipt
+  registration. L4 added Soroban-based commitment and receipt registration.
+- **No API/MCP server** (resolved by L6): L3 had no external interface.
+  L6 exposed the deterministic core via HTTP API and MCP server.
 
 ## L4: Commitments and receipts on-chain
 
@@ -339,7 +348,15 @@ is CONTRADICTION regardless of individual claim verdicts.
 
 - **No on-chain dispute resolution:** L5 is off-chain analysis only. A
   future Soroban contract could store dispute results on-chain.
-- **No API/MCP server:** L6 will expose verification as an API.
+
+## Milestone history (L5)
+
+The following was an L5 limitation that has since been resolved by a
+later level. It is recorded here as architectural history, not as a
+current limitation:
+
+- **No API/MCP server** (resolved by L6): L5 had no external interface.
+  L6 exposed the deterministic core via HTTP API and MCP server.
 
 ## L6: HTTP API and MCP server
 

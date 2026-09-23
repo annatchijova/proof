@@ -206,6 +206,21 @@ _INDEX_HTML = """<!DOCTYPE html>
   .section p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
   .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
 
+  /* Verifier hint */
+  .hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+
+  /* Examples */
+  .examples { margin-bottom: 1.5rem; }
+  .examples h3 { font-size: 0.85rem; color: var(--blue); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .example-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .example-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 0.6rem 0.8rem; font-size: 0.85rem; cursor: pointer;
+    text-align: left; width: 100%; font-weight: 500;
+  }
+  .example-item:hover { border-color: var(--blue); }
+  .example-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.4; }
+
   @media (max-width: 600px) {
     .evidence-grid { grid-template-columns: 1fr; }
     .hero-flow { font-size: 0.8rem; }
@@ -245,6 +260,7 @@ _INDEX_HTML = """<!DOCTYPE html>
 
   <div class="card" id="verifier">
     <h2 data-i18n="verifier_title"></h2>
+    <p class="hint" data-i18n="verifier_hint"></p>
     <label for="tx_hash" data-i18n="tx_hash_label"></label>
     <input type="text" id="tx_hash" data-i18n-ph="tx_hash_ph">
 
@@ -279,10 +295,17 @@ _INDEX_HTML = """<!DOCTYPE html>
       <option value="mainnet">Mainnet</option>
     </select>
 
-    <div style="display:flex; gap:0.5rem;">
-      <button id="verify_btn" onclick="verify()" data-i18n="verify_btn"></button>
-      <button id="example_btn" onclick="loadExample()" data-i18n="example_btn" style="white-space:nowrap; width:auto;"></button>
+    <button id="verify_btn" onclick="verify()" data-i18n="verify_btn"></button>
+  </div>
+
+  <div class="examples">
+    <h3 data-i18n="examples_h"></h3>
+    <div class="example-list">
+      <button class="example-item" onclick="loadExample('verified')" data-i18n="ex_verified_btn"></button>
+      <button class="example-item" onclick="loadExample('not_verified')" data-i18n="ex_not_verified_btn"></button>
+      <button class="example-item" onclick="loadExample('insufficient')" data-i18n="ex_insufficient_btn"></button>
     </div>
+    <p class="example-desc" id="example_desc"></p>
   </div>
 
   <div id="error" class="card error hidden"></div>
@@ -307,10 +330,11 @@ _INDEX_HTML = """<!DOCTYPE html>
   <div class="card">
     <h2 data-i18n="testnet_title"></h2>
     <div class="evidence-grid">
+      <div class="evidence-item"><span class="label" data-i18n="ev_verdict"></span><br><span class="value" style="color:var(--green); font-weight:700;">VERIFIED</span></div>
       <div class="evidence-item"><span class="label" data-i18n="ev_payment_ledger"></span><br><span class="value">4821215</span></div>
       <div class="evidence-item"><span class="label" data-i18n="ev_commitment_ledger"></span><br><span class="value">4821217</span></div>
       <div class="evidence-item"><span class="label" data-i18n="ev_receipt_ledger"></span><br><span class="value">4821218</span></div>
-      <div class="evidence-item"><span class="label" data-i18n="ev_seal"></span><br><span class="value">c6d21734...</span></div>
+      <div class="evidence-item" style="grid-column:1/-1;"><span class="label" data-i18n="ev_seal"></span><br><span class="value">c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51</span></div>
     </div>
     <div class="evidence-links">
       <a href="https://horizon-testnet.stellar.org/transactions/0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669" target="_blank" rel="noopener" data-i18n="ev_link_tx"></a>
@@ -343,6 +367,7 @@ const I18N = {
     hero_cta: 'Verify a payment',
     hero_repo: 'View source on GitHub',
     verifier_title: 'Verify a payment',
+    verifier_hint: 'Paste just a transaction hash to reconstruct what happened, or add expected fields to verify a specific claim.',
     tx_hash_label: 'Transaction hash (64-char hex)',
     tx_hash_ph: 'e.g. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Expected sender (G...) — optional',
@@ -351,20 +376,27 @@ const I18N = {
     recipient_ph: 'G...',
     asset_label: 'Asset code — optional',
     asset_ph: 'XLM, USDC, ...',
-    amount_label: 'Amount (XLM) — optional',
+    amount_label: 'Amount — optional',
     reference_label: 'Expected reference/memo — optional',
     reference_ph: 'e.g. INV-184',
     network_label: 'Network',
     verify_btn: 'Verify Payment',
     verifying: 'Verifying...',
-    example_btn: 'Try an example',
     seal_label: 'Sealed evidence bundle (SHA-256)',
     th_check: 'Check', th_status: 'Status', th_detail: 'Detail',
     tx_required: 'Transaction hash is required.',
     error_prefix: 'Error: ',
     net_error: 'Network error: ',
     note_prefix: 'Note: ',
+    examples_h: 'Try with a real Testnet transaction',
+    ex_verified_btn: 'Payment that matches the claim → VERIFIED',
+    ex_verified_desc: 'This transaction paid 100 XLM to this account. The claim matches the ledger.',
+    ex_not_verified_btn: 'Claim that contradicts the ledger → NOT_VERIFIED',
+    ex_not_verified_desc: 'Same real transaction, but the claim says it paid 200 XLM. The ledger shows 100. The evidence contradicts the claim.',
+    ex_insufficient_btn: 'Transaction that cannot be found → INSUFFICIENT_EVIDENCE',
+    ex_insufficient_desc: 'This transaction hash does not exist on Testnet. There is not enough evidence to decide.',
     testnet_title: 'Live on Stellar Testnet',
+    ev_verdict: 'Verdict',
     ev_payment_ledger: 'Payment ledger',
     ev_commitment_ledger: 'Commitment ledger',
     ev_receipt_ledger: 'Receipt ledger',
@@ -375,7 +407,7 @@ const I18N = {
     sec_stellar_h: 'Why Stellar',
     sec_stellar_p: 'Stellar is the source of evidence: a public ledger where every transaction is independently verifiable by anyone. Soroban is the on-chain registry where PROOF commits sealed evidence — commitments and receipts are stored on-chain with enforced authorization and immutability.',
     sec_diff_h: 'What makes PROOF different',
-    sec_diff_p: 'Claim-specific deterministic adjudication: the same input always produces the same sealed result. Sealed evidence bundles are tamper-evident and independently verifiable with a stdlib-only verifier. No probabilities, no model judgments, no screenshots.',
+    sec_diff_p: 'The verdict follows from explicit rules over ledger evidence, not from a probabilistic estimate. The same input always produces the same sealed result, independently reproducible with a stdlib-only verifier.',
     footer: 'PROOF — deterministic Stellar payment verification. No AI, no probabilities, no screenshots.'
   },
   es: {
@@ -387,6 +419,7 @@ const I18N = {
     hero_cta: 'Verificar un pago',
     hero_repo: 'Ver código en GitHub',
     verifier_title: 'Verificar un pago',
+    verifier_hint: 'Pegá solamente un hash de transacción para reconstruir qué ocurrió, o agregá campos esperados para verificar un claim específico.',
     tx_hash_label: 'Hash de transacción (64 chars hex)',
     tx_hash_ph: 'ej. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Sender esperado (G...) — opcional',
@@ -395,20 +428,27 @@ const I18N = {
     recipient_ph: 'G...',
     asset_label: 'Código de asset — opcional',
     asset_ph: 'XLM, USDC, ...',
-    amount_label: 'Monto (XLM) — opcional',
+    amount_label: 'Monto — opcional',
     reference_label: 'Referencia/memo esperado — opcional',
     reference_ph: 'ej. INV-184',
     network_label: 'Red',
     verify_btn: 'Verificar Pago',
     verifying: 'Verificando...',
-    example_btn: 'Probar un ejemplo',
     seal_label: 'Bundle de evidencia sellado (SHA-256)',
     th_check: 'Check', th_status: 'Estado', th_detail: 'Detalle',
     tx_required: 'El hash de transacción es obligatorio.',
     error_prefix: 'Error: ',
     net_error: 'Error de red: ',
     note_prefix: 'Nota: ',
+    examples_h: 'Probar con una transacción real de Testnet',
+    ex_verified_btn: 'Pago que coincide con el claim → VERIFIED',
+    ex_verified_desc: 'Esta transacción pagó 100 XLM a esta cuenta. El claim coincide con el ledger.',
+    ex_not_verified_btn: 'Claim que contradice el ledger → NOT_VERIFIED',
+    ex_not_verified_desc: 'La misma transacción real, pero el claim dice que pagó 200 XLM. El ledger muestra 100. La evidencia contradice el claim.',
+    ex_insufficient_btn: 'Transacción que no se puede encontrar → INSUFFICIENT_EVIDENCE',
+    ex_insufficient_desc: 'Este hash de transacción no existe en Testnet. No hay evidencia suficiente para decidir.',
     testnet_title: 'Activo en Stellar Testnet',
+    ev_verdict: 'Veredicto',
     ev_payment_ledger: 'Ledger de pago',
     ev_commitment_ledger: 'Ledger de commitment',
     ev_receipt_ledger: 'Ledger de receipt',
@@ -419,7 +459,7 @@ const I18N = {
     sec_stellar_h: 'Por qué Stellar',
     sec_stellar_p: 'Stellar es la fuente de evidencia: un ledger público donde cada transacción es verificable por cualquiera. Soroban es el registry on-chain donde PROOF commitea evidencia sellada — commitments y receipts se guardan on-chain con autorización e inmutabilidad enforced.',
     sec_diff_h: 'Qué hace a PROOF diferente',
-    sec_diff_p: 'Adjudicación determinista específica al claim: la misma entrada siempre produce el mismo resultado sellado. Los bundles de evidencia sellados son tamper-evident y verificables independientemente con un verificador stdlib-only. Sin probabilidades, sin juicios de modelo, sin capturas.',
+    sec_diff_p: 'El veredicto surge de reglas explícitas sobre evidencia del ledger, no de una estimación probabilística. La misma entrada siempre produce el mismo resultado sellado, reproducible independientemente con un verificador stdlib-only.',
     footer: 'PROOF — verificación determinista de pagos Stellar. Sin IA, sin probabilidades, sin capturas.'
   }
 };
@@ -458,14 +498,41 @@ function toggleTheme() {
   applyTheme();
 }
 
-function loadExample() {
-  document.getElementById('tx_hash').value = '0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669';
-  document.getElementById('sender').value = 'GBCGM4OPIEOSI3IADI6J67CKHKZF72WZEGBHS4BNK5MQMLCTYFDJL66O';
-  document.getElementById('recipient').value = 'GDLWNTN6N2NTX5DFFIGL7PLXY6TGMYG7DPURQOXSOU3MBX5WRLLJZEWV';
-  document.getElementById('asset_code').value = 'XLM';
-  document.getElementById('amount_xlm').value = '100';
-  document.getElementById('reference').value = 'INV-TEST-129650';
-  document.getElementById('network').value = 'testnet';
+function loadExample(kind) {
+  const t = I18N[lang];
+  const descDiv = document.getElementById('example_desc');
+  // Clear previous result
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('error').classList.add('hidden');
+
+  if (kind === 'verified') {
+    document.getElementById('tx_hash').value = '0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669';
+    document.getElementById('sender').value = 'GBCGM4OPIEOSI3IADI6J67CKHKZF72WZEGBHS4BNK5MQMLCTYFDJL66O';
+    document.getElementById('recipient').value = 'GDLWNTN6N2NTX5DFFIGL7PLXY6TGMYG7DPURQOXSOU3MBX5WRLLJZEWV';
+    document.getElementById('asset_code').value = 'XLM';
+    document.getElementById('amount_xlm').value = '100';
+    document.getElementById('reference').value = 'INV-TEST-129650';
+    document.getElementById('network').value = 'testnet';
+    descDiv.textContent = t.ex_verified_desc;
+  } else if (kind === 'not_verified') {
+    document.getElementById('tx_hash').value = '0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669';
+    document.getElementById('sender').value = 'GBCGM4OPIEOSI3IADI6J67CKHKZF72WZEGBHS4BNK5MQMLCTYFDJL66O';
+    document.getElementById('recipient').value = 'GDLWNTN6N2NTX5DFFIGL7PLXY6TGMYG7DPURQOXSOU3MBX5WRLLJZEWV';
+    document.getElementById('asset_code').value = 'XLM';
+    document.getElementById('amount_xlm').value = '200';
+    document.getElementById('reference').value = '';
+    document.getElementById('network').value = 'testnet';
+    descDiv.textContent = t.ex_not_verified_desc;
+  } else if (kind === 'insufficient') {
+    document.getElementById('tx_hash').value = 'a'.repeat(64);
+    document.getElementById('sender').value = '';
+    document.getElementById('recipient').value = '';
+    document.getElementById('asset_code').value = '';
+    document.getElementById('amount_xlm').value = '';
+    document.getElementById('reference').value = '';
+    document.getElementById('network').value = 'testnet';
+    descDiv.textContent = t.ex_insufficient_desc;
+  }
   document.getElementById('verifier').scrollIntoView({behavior:'smooth'});
 }
 
