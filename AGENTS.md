@@ -87,6 +87,8 @@ proof/
   adjudicator.py     # compare claim vs evidence (+ optional commitment), produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
   engine.py          # main entry points: verify_payment, verify_dispute, issue_receipt
+  api.py             # FastAPI HTTP API (L6)
+  mcp_server.py      # MCP server over stdio (L6)
 ```
 
 ## Commit conventions

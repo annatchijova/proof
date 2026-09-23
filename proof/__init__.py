@@ -30,7 +30,6 @@ from .evidence import (
 from .engine import issue_receipt, verify_dispute, verify_payment
 
 __version__ = "0.4.0"
-
 __all__ = [
     "PaymentClaim",
     "PaymentEvidence",

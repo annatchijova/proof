@@ -321,6 +321,64 @@ is CONTRADICTION regardless of individual claim verdicts.
   future Soroban contract could store dispute results on-chain.
 - **No API/MCP server:** L6 will expose verification as an API.
 
+## L6: HTTP API and MCP server
+
+L6 exposes the deterministic core via two interfaces so third parties can
+verify payment claims without running the full pipeline locally.
+
+### HTTP API (FastAPI)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | GET | Health check |
+| `/verify` | POST | Verify a single payment claim |
+| `/verify/dispute` | POST | Verify a dispute between two claims |
+| `/receipt` | POST | Issue a receipt from a verified bundle |
+
+The API is a thin transport layer. All logic lives in the deterministic
+core. The API never modifies verdicts, seals, or evidence. Input
+validation happens at the boundary (Pydantic models + PaymentClaim
+validation) before reaching the engine.
+
+Run the API:
+```bash
+uvicorn proof.api:app --reload
+```
+
+### MCP server (stdio)
+
+The MCP server exposes four tools for AI agents:
+
+| Tool | Description |
+|---|---|
+| `verify_payment` | Verify a single payment claim |
+| `verify_dispute` | Verify a dispute between two claims |
+| `issue_receipt` | Issue a receipt from a verified bundle |
+| `compute_commitment_hash` | Compute a commitment hash from payment terms |
+
+The MCP server is a thin transport layer. It never modifies verdicts,
+seals, or evidence. All logic lives in the deterministic core.
+
+Run the MCP server:
+```bash
+python -m proof.mcp_server
+```
+
+### What L6 does not do
+
+- The API does not authenticate callers. Authentication is a deployment
+  concern, not a verification concern.
+- The API does not cache results. Each call fetches fresh ledger data.
+- The MCP server does not expose the verifier. Verification of a bundle
+  is a local operation (the verifier is stdlib-only).
+
+## Known limitations (L6)
+
+- **No authentication:** the API is open. Deploy behind a gateway with
+  auth/rate-limiting for production.
+- **No caching:** each API call fetches fresh ledger data.
+- **No streaming:** results are returned as a single JSON response.
+
 ## Falsifiers
 
 - **Determinism claim:** if two runs of the same claim + evidence produce
