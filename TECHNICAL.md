@@ -54,6 +54,9 @@ For an explorable rendered version of this architecture, see
 [`docs/proof-architecture.html`](docs/proof-architecture.html). Its source
 specification and visual-check receipt are kept beside the artifact.
 
+The final post-fixes adversarial review is documented in
+[`docs/red-team-round-2.md`](docs/red-team-round-2.md).
+
 ## Data model
 
 ### PaymentClaim
