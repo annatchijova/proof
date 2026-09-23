@@ -8,3 +8,13 @@ build/
 .pytest_cache/
 .coverage
 *.db
+
+# Secrets and Stellar identities — never commit
+*.seed
+*.secret
+.env
+.env.*
+~/.config/stellar/
+stellar-identity-*.toml
+seed_phrase*.txt
+/tmp/seed_phrase*.txt

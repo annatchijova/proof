@@ -258,13 +258,29 @@ At the time of this document:
 * dispute handling for contradictory claims: **implemented**;
 * HTTP API: **implemented**;
 * MCP interface: **implemented**;
-* Soroban contract: **implemented; real Testnet validation in progress**;
+* Soroban contract: **deployed and validated on Stellar Testnet**;
 * adversarial/red-team review: **performed; identified findings addressed**;
-* automated test suite: **154 passing, 2 skipped at latest reported run**;
-* public deployment: **pending**;
+* automated test suite: **161 passing, 0 skipped**;
+* public deployment: **deployed on Google Cloud Run**;
 * real-user problem validation: **pending**.
 
 These statuses should be updated as evidence changes.
+
+#### Reproducible Testnet evidence
+
+The full end-to-end path was validated against real Stellar Testnet data:
+
+* Payment transaction: `0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669`
+* Payment ledger: `4821215`
+* PROOF verdict: `VERIFIED`
+* Evidence seal: `c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51`
+* Soroban registry contract: `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
+* Commitment ledger: `4821217`
+* Receipt ledger: `4821218`
+
+The sealed evidence bundle was independently verified, tampering was detected
+after mutation, and the on-chain commitment and receipt were retrieved from
+the deployed Soroban contract.
 
 ---
 
@@ -418,11 +434,25 @@ Estado actual reportado:
 * disputas: **implementadas**;
 * API HTTP: **implementada**;
 * MCP: **implementado**;
-* contrato Soroban: **implementado, validación real en Testnet en curso**;
+* contrato Soroban: **desplegado y validado en Stellar Testnet**;
 * red team: **realizado y findings tratados**;
-* suite automatizada: **154 passed, 2 skipped**;
-* deployment público: **pendiente**;
+* suite automatizada: **161 passed, 0 skipped**;
+* deployment público: **desplegado en Google Cloud Run**;
 * validación con usuarios: **pendiente**.
+
+Evidencia reproducible en Testnet:
+
+* Transacción de pago: `0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669`
+* Ledger de pago: `4821215`
+* Veredicto PROOF: `VERIFIED`
+* Seal de evidencia: `c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51`
+* Contrato Soroban: `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
+* Ledger de commitment: `4821217`
+* Ledger de receipt: `4821218`
+
+El bundle sellado fue verificado independientemente, el tampering fue detectado
+tras la mutación, y el commitment y receipt on-chain fueron recuperados del
+contrato Soroban desplegado.
 
 ---
 

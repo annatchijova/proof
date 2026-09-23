@@ -133,6 +133,22 @@ scripts/
 tests/               # 161 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversariales
 ```
 
+## Evidencia en Testnet
+
+PROOF fue validado end-to-end contra Stellar Testnet:
+
+- **Transacción de pago:** `0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669`
+- **Ledger de pago:** `4821215`
+- **Veredicto PROOF:** `VERIFIED`
+- **Seal de evidencia:** `c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51`
+- **Registro Soroban:** `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
+- **Ledger de commitment:** `4821217`
+- **Ledger de receipt:** `4821218`
+
+El bundle de evidencia resultante fue verificado independientemente, el
+tampering fue detectado tras la mutación, y el commitment y receipt on-chain
+fueron recuperados del contrato Soroban desplegado.
+
 ## Probalo
 
 ### Opción 1: Web UI

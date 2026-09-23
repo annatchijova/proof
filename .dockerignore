@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+tests/
+docs/
+*.md
+soroban/target/
+soroban/proof-registry/target/
+AGENTS.md
+CLAUDE.md
+.claude/
+.devin/

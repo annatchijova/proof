@@ -132,6 +132,22 @@ scripts/
 tests/               # 161 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversarial
 ```
 
+## Live Testnet proof
+
+PROOF has been validated end-to-end against the Stellar Testnet:
+
+- **Payment transaction:** `0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669`
+- **Payment ledger:** `4821215`
+- **PROOF verdict:** `VERIFIED`
+- **Evidence seal:** `c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51`
+- **Soroban registry:** `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
+- **Commitment ledger:** `4821217`
+- **Receipt ledger:** `4821218`
+
+The resulting evidence bundle was independently verified, tampering was
+detected after mutation, and the on-chain commitment and receipt were retrieved
+from the deployed Soroban contract.
+
 ## Try it
 
 ### Option 1: Web UI
