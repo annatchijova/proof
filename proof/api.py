@@ -86,40 +86,48 @@ def health() -> dict[str, str]:
 
 
 _INDEX_HTML = """<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PROOF — Payment Evidence, Not Screenshots</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --card: #161b22;
-    --border: #30363d;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --blue: #58a6ff;
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #e6edf3;
+    --muted: #8b949e; --green: #3fb950; --red: #f85149; --yellow: #d29922;
+    --blue: #58a6ff; --input-bg: #0d1117;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f8fa; --card: #ffffff; --border: #d0d7de; --text: #1f2328;
+    --muted: #656d76; --green: #1a7f37; --red: #cf222e; --yellow: #9a6700;
+    --blue: #0969da; --input-bg: #f6f8fa;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     background: var(--bg); color: var(--text); line-height: 1.5; padding: 2rem;
-    max-width: 800px; margin: 0 auto;
+    max-width: 800px; margin: 0 auto; transition: background 0.2s, color 0.2s;
   }
-  h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
-  .tagline { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+  .header-left h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .tagline { color: var(--muted); font-size: 0.95rem; max-width: 500px; }
+  .controls { display: flex; gap: 0.5rem; align-items: center; }
+  .toggle {
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer;
+    font-weight: 600;
+  }
+  .toggle:hover { border-color: var(--blue); }
+  .toggle.active { background: var(--blue); color: var(--bg); border-color: var(--blue); }
   .card {
     background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    padding: 1.5rem; margin-bottom: 1.5rem;
+    padding: 1.5rem; margin-bottom: 1.5rem; transition: background 0.2s, border 0.2s;
   }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.3rem; }
   input, select {
-    width: 100%; padding: 0.6rem; background: var(--bg); border: 1px solid var(--border);
+    width: 100%; padding: 0.6rem; background: var(--input-bg); border: 1px solid var(--border);
     border-radius: 6px; color: var(--text); font-size: 0.9rem; font-family: monospace;
-    margin-bottom: 1rem;
+    margin-bottom: 1rem; transition: background 0.2s, border 0.2s;
   }
   input:focus { border-color: var(--blue); outline: none; }
   button {
@@ -144,55 +152,64 @@ _INDEX_HTML = """<!DOCTYPE html>
   .status-ABSTAIN { color: var(--yellow); }
   .seal {
     font-family: monospace; font-size: 0.8rem; color: var(--muted);
-    word-break: break-all; padding: 0.5rem; background: var(--bg); border-radius: 4px;
+    word-break: break-all; padding: 0.5rem; background: var(--input-bg); border-radius: 4px;
   }
   .hidden { display: none; }
   .error { color: var(--red); padding: 1rem; background: rgba(248,81,73,0.1); border-radius: 6px; }
   .scope { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
   .row { display: flex; gap: 1rem; }
   .row > div { flex: 1; }
+  .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
 </style>
 </head>
 <body>
-  <h1>PROOF</h1>
-  <p class="tagline">Someone sends you a screenshot saying they paid. PROOF verifies what actually happened — from the Stellar ledger, not from images.</p>
+  <div class="header">
+    <div class="header-left">
+      <h1>PROOF</h1>
+      <p class="tagline" data-i18n="tagline"></p>
+    </div>
+    <div class="controls">
+      <button class="toggle" id="lang_btn" onclick="toggleLang()">ES</button>
+      <button class="toggle" id="theme_btn" onclick="toggleTheme()">&#9681;</button>
+    </div>
+  </div>
 
   <div class="card">
-    <label for="tx_hash">Transaction hash (64-char hex)</label>
-    <input type="text" id="tx_hash" placeholder="e.g. 086467a70920eae62efb1c7189e8bd4cd1ac3024039e93f4cb0493da046958a4">
+    <label for="tx_hash" data-i18n="tx_hash_label"></label>
+    <input type="text" id="tx_hash" data-i18n-ph="tx_hash_ph">
 
     <div class="row">
       <div>
-        <label for="sender">Expected sender (G...) — optional</label>
-        <input type="text" id="sender" placeholder="G...">
+        <label for="sender" data-i18n="sender_label"></label>
+        <input type="text" id="sender" data-i18n-ph="sender_ph">
       </div>
       <div>
-        <label for="recipient">Expected recipient (G...) — optional</label>
-        <input type="text" id="recipient" placeholder="G...">
+        <label for="recipient" data-i18n="recipient_label"></label>
+        <input type="text" id="recipient" data-i18n-ph="recipient_ph">
       </div>
     </div>
 
     <div class="row">
       <div>
-        <label for="asset_code">Asset code — optional</label>
-        <input type="text" id="asset_code" placeholder="XLM, USDC, ...">
+        <label for="asset_code" data-i18n="asset_label"></label>
+        <input type="text" id="asset_code" data-i18n-ph="asset_ph">
       </div>
       <div>
-        <label for="amount_xlm">Amount (XLM) — optional</label>
+        <label for="amount_xlm" data-i18n="amount_label"></label>
         <input type="number" id="amount_xlm" placeholder="100" step="0.0000001">
       </div>
     </div>
 
-    <label for="reference">Expected reference/memo — optional</label>
-    <input type="text" id="reference" placeholder="e.g. INV-184">
+    <label for="reference" data-i18n="reference_label"></label>
+    <input type="text" id="reference" data-i18n-ph="reference_ph">
 
-    <label for="network">Network</label>
+    <label for="network" data-i18n="network_label"></label>
     <select id="network">
       <option value="testnet">Testnet</option>
       <option value="mainnet">Mainnet</option>
     </select>
 
-    <button id="verify_btn" onclick="verify()">Verify Payment</button>
+    <button id="verify_btn" onclick="verify()" data-i18n="verify_btn"></button>
   </div>
 
   <div id="error" class="card error hidden"></div>
@@ -200,36 +217,124 @@ _INDEX_HTML = """<!DOCTYPE html>
   <div id="result" class="hidden">
     <div class="card">
       <div id="verdict" class="verdict"></div>
-      <label>Sealed evidence bundle (SHA-256)</label>
+      <label data-i18n="seal_label"></label>
       <div id="seal" class="seal"></div>
       <div id="scope" class="scope"></div>
     </div>
     <div class="card">
       <table>
         <thead>
-          <tr><th>Check</th><th>Status</th><th>Detail</th></tr>
+          <tr><th data-i18n="th_check"></th><th data-i18n="th_status"></th><th data-i18n="th_detail"></th></tr>
         </thead>
         <tbody id="checks_body"></tbody>
       </table>
     </div>
   </div>
 
+  <div class="footer" data-i18n="footer"></div>
+
 <script>
+const I18N = {
+  en: {
+    tagline: 'Someone sends you a screenshot saying they paid. PROOF verifies what actually happened — from the Stellar ledger, not from images.',
+    tx_hash_label: 'Transaction hash (64-char hex)',
+    tx_hash_ph: 'e.g. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
+    sender_label: 'Expected sender (G...) — optional',
+    sender_ph: 'G...',
+    recipient_label: 'Expected recipient (G...) — optional',
+    recipient_ph: 'G...',
+    asset_label: 'Asset code — optional',
+    asset_ph: 'XLM, USDC, ...',
+    amount_label: 'Amount (XLM) — optional',
+    reference_label: 'Expected reference/memo — optional',
+    reference_ph: 'e.g. INV-184',
+    network_label: 'Network',
+    verify_btn: 'Verify Payment',
+    verifying: 'Verifying...',
+    seal_label: 'Sealed evidence bundle (SHA-256)',
+    th_check: 'Check', th_status: 'Status', th_detail: 'Detail',
+    tx_required: 'Transaction hash is required.',
+    error_prefix: 'Error: ',
+    net_error: 'Network error: ',
+    note_prefix: 'Note: ',
+    footer: 'PROOF — deterministic Stellar payment verification. No AI, no probabilities, no screenshots.'
+  },
+  es: {
+    tagline: 'Alguien te manda una captura diciendo que te pagó. PROOF verifica qué pasó realmente — desde el ledger de Stellar, no desde imágenes.',
+    tx_hash_label: 'Hash de transacción (64 chars hex)',
+    tx_hash_ph: 'ej. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
+    sender_label: 'Sender esperado (G...) — opcional',
+    sender_ph: 'G...',
+    recipient_label: 'Recipient esperado (G...) — opcional',
+    recipient_ph: 'G...',
+    asset_label: 'Codigo de asset — opcional',
+    asset_ph: 'XLM, USDC, ...',
+    amount_label: 'Monto (XLM) — opcional',
+    reference_label: 'Referencia/memo esperado — opcional',
+    reference_ph: 'ej. INV-184',
+    network_label: 'Red',
+    verify_btn: 'Verificar Pago',
+    verifying: 'Verificando...',
+    seal_label: 'Bundle de evidencia sellado (SHA-256)',
+    th_check: 'Check', th_status: 'Estado', th_detail: 'Detalle',
+    tx_required: 'El hash de transaccion es obligatorio.',
+    error_prefix: 'Error: ',
+    net_error: 'Error de red: ',
+    note_prefix: 'Nota: ',
+    footer: 'PROOF — verificacion determinista de pagos Stellar. Sin IA, sin probabilidades, sin capturas.'
+  }
+};
+
+let lang = localStorage.getItem('proof-lang') || 'en';
+let theme = localStorage.getItem('proof-theme') || 'dark';
+
+function applyI18n() {
+  const t = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (t[key]) el.placeholder = t[key];
+  });
+  document.documentElement.lang = lang;
+  document.getElementById('lang_btn').textContent = lang === 'en' ? 'ES' : 'EN';
+}
+
+function toggleLang() {
+  lang = lang === 'en' ? 'es' : 'en';
+  localStorage.setItem('proof-lang', lang);
+  applyI18n();
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme_btn').innerHTML = theme === 'dark' ? '&#9728;' : '&#9790;';
+}
+
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('proof-theme', theme);
+  applyTheme();
+}
+
 async function verify() {
+  const t = I18N[lang];
   const btn = document.getElementById('verify_btn');
   const errDiv = document.getElementById('error');
   const resultDiv = document.getElementById('result');
   btn.disabled = true;
-  btn.textContent = 'Verifying...';
+  btn.textContent = t.verifying;
   errDiv.classList.add('hidden');
   resultDiv.classList.add('hidden');
 
   const txHash = document.getElementById('tx_hash').value.trim();
   if (!txHash) {
-    errDiv.textContent = 'Transaction hash is required.';
+    errDiv.textContent = t.tx_required;
     errDiv.classList.remove('hidden');
     btn.disabled = false;
-    btn.textContent = 'Verify Payment';
+    btn.textContent = t.verify_btn;
     return;
   }
 
@@ -258,22 +363,23 @@ async function verify() {
     });
     const data = await resp.json();
     if (!resp.ok) {
-      errDiv.textContent = 'Error: ' + (data.detail || JSON.stringify(data));
+      errDiv.textContent = t.error_prefix + (data.detail || JSON.stringify(data));
       errDiv.classList.remove('hidden');
       btn.disabled = false;
-      btn.textContent = 'Verify Payment';
+      btn.textContent = t.verify_btn;
       return;
     }
     showResult(data);
   } catch (e) {
-    errDiv.textContent = 'Network error: ' + e.message;
+    errDiv.textContent = t.net_error + e.message;
     errDiv.classList.remove('hidden');
   }
   btn.disabled = false;
-  btn.textContent = 'Verify Payment';
+  btn.textContent = t.verify_btn;
 }
 
 function showResult(bundle) {
+  const t = I18N[lang];
   const verdictDiv = document.getElementById('verdict');
   verdictDiv.textContent = bundle.verdict;
   verdictDiv.className = 'verdict ' + bundle.verdict;
@@ -282,7 +388,7 @@ function showResult(bundle) {
 
   const scopeDiv = document.getElementById('scope');
   if (bundle.scope_notes && bundle.scope_notes.length > 0) {
-    scopeDiv.innerHTML = '<br>' + bundle.scope_notes.map(n => 'Note: ' + n).join('<br>');
+    scopeDiv.innerHTML = '<br>' + bundle.scope_notes.map(n => t.note_prefix + n).join('<br>');
   } else {
     scopeDiv.textContent = '';
   }
@@ -299,6 +405,9 @@ function showResult(bundle) {
 
   document.getElementById('result').classList.remove('hidden');
 }
+
+applyI18n();
+applyTheme();
 </script>
 </body>
 </html>"""
