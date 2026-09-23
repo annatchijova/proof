@@ -4,7 +4,7 @@
   <img src="visual/logo.png" alt="Logo de PROOF" width="240">
 </p>
 
-[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md)
+[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
 
 ## El problema
 
