@@ -16,10 +16,11 @@ core. The API never modifies verdicts, seals, or evidence.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field, field_validator
 
 from .claim import PaymentClaim
@@ -90,6 +91,15 @@ _INDEX_HTML = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Verify Stellar payment claims from the ledger, not from screenshots.">
+<meta name="theme-color" content="#0d1117">
+<meta property="og:title" content="PROOF — Payment Evidence, Not Screenshots">
+<meta property="og:description" content="Deterministic Stellar payment verification with sealed evidence bundles.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://proof-api-1028999311218.us-central1.run.app/">
+<meta property="og:image" content="https://proof-api-1028999311218.us-central1.run.app/brand/logo.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/png" href="/brand/logo.png">
 <title>PROOF — Payment Evidence, Not Screenshots</title>
 <style>
   :root[data-theme="dark"] {
@@ -634,6 +644,13 @@ applyTheme();
 def index() -> str:
     """User-facing verification UI."""
     return _INDEX_HTML
+
+
+@app.get("/brand/logo.png", include_in_schema=False)
+def brand_logo() -> FileResponse:
+    """Serve the repository logo for favicon and social previews."""
+    logo_path = Path(__file__).resolve().parent.parent / "visual" / "logo.png"
+    return FileResponse(logo_path, media_type="image/png")
 
 
 @app.post("/verify")

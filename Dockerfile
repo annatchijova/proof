@@ -15,6 +15,7 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY proof/ ./proof/
 COPY scripts/ ./scripts/
+COPY visual/ ./visual/
 RUN pip install --no-cache-dir .
 
 # Runtime configuration via environment variables.

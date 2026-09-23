@@ -47,6 +47,13 @@ class TestUI:
         assert "PROOF" in resp.text
         assert "Verify Payment" in resp.text
 
+    def test_brand_logo_is_served(self):
+        """Invariant: the deployed UI can serve its referenced brand asset."""
+        resp = client.get("/brand/logo.png")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("image/png")
+        assert resp.content.startswith(b"\x89PNG")
+
 
 class TestVerifyEndpoint:
     def test_verify_rejects_invalid_tx_hash(self):
