@@ -83,4 +83,5 @@ Use the three-minute version, then add:
 
 Avoid saying “PROOF proves the payment was legitimate”, “PROOF proves delivery”,
 or “PROOF identifies the human behind the wallet”. Those claims exceed the
-evidence model.
+evidence model. Detailed timing and Q&A wording are in the
+[speaker notes](speaker-notes.md).
