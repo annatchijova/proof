@@ -46,6 +46,9 @@ class TestUI:
         assert resp.status_code == 200
         assert "PROOF" in resp.text
         assert "Verify Payment" in resp.text
+        assert 'id="error" class="card error hidden" role="alert"' in resp.text
+        assert 'id="result" class="hidden" aria-live="polite"' in resp.text
+        assert 'id="theme_btn"' in resp.text and 'aria-label="Switch color theme"' in resp.text
 
     def test_brand_logo_is_served(self):
         """Invariant: the deployed UI can serve its referenced brand asset."""
