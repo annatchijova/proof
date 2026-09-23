@@ -250,13 +250,32 @@ This creates an on-chain record that PROOF verified the payment at a
 specific time. The receipt is outside the seal (it contains the seal, not
 the other way around).
 
-### On-chain storage mechanism
+### On-chain storage: Soroban (primary) vs manage_data (fallback)
 
-L4 uses Stellar's native `manage_data` operations rather than Soroban smart
-contracts. This is simpler, requires no contract deployment, and is
-sufficient for storing commitment hashes and receipt seals. The commitment
-is a hash, so it doesn't reveal the payment details (privacy) and is
-tamper-evident (can't change after the transaction is on the ledger).
+PROOF supports two on-chain commitment mechanisms. The commitment hash
+computation (`CommitmentTerms.commitment_hash()`) is identical for both —
+the difference is only in the transport.
+
+**Soroban contract (PRIMARY):** the `proof-registry` contract is deployed
+on Stellar Testnet. It provides:
+- `require_auth()` — the committer must authorize the registration.
+- Enforced immutability — a commitment or receipt cannot be overwritten
+  (the contract panics on duplicate references/tx hashes).
+- On-chain temporal order verification — `verify_temporal_order` checks
+  that a commitment was registered at an earlier ledger than a receipt.
+- Queryable storage via Soroban RPC.
+
+Contract ID (Testnet): `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
+
+**manage_data (FALLBACK):** native Stellar `manage_data` operations store
+the commitment hash as a key-value pair. This works on all Stellar
+accounts without Soroban, but lacks auth enforcement, immutability, and
+temporal order verification. It is retained for environments where
+Soroban is not available.
+
+The API and MCP server use the Soroban contract as the primary
+mechanism. The manage_data path remains in the Python core for backward
+compatibility but is not exposed through the API.
 
 ## Known limitations (L4)
 
@@ -265,9 +284,10 @@ tamper-evident (can't change after the transaction is on the ledger).
   but not to PROOF. PROOF reconstructs them from the payment evidence and
   checks the hash. This means PROOF can verify that the payment matches the
   commitment, but cannot independently recover the commitment terms.
-- **No Soroban integration:** L4 uses `manage_data` only. Smart contract
-  integration (Soroban) is a future enhancement.
-- **No API/MCP server:** L6 will expose verification as an API.
+- **Contract stores pre-computed hashes:** the Soroban contract does not
+  canonicalize or verify the commitment terms. It trusts the off-chain
+  core to compute the hash correctly. This is by design — the contract is
+  a registry, not a verifier.
 
 ## L5: Disputes and contradictory states
 
@@ -330,10 +350,15 @@ verify payment claims without running the full pipeline locally.
 
 | Endpoint | Method | Description |
 |---|---|---|
+| `/` | GET | User-facing verification UI (HTML) |
 | `/health` | GET | Health check |
 | `/verify` | POST | Verify a single payment claim |
 | `/verify/dispute` | POST | Verify a dispute between two claims |
 | `/receipt` | POST | Issue a receipt from a verified bundle |
+| `/commit` | POST | Register a commitment on the Soroban contract |
+| `/onchain/commitment` | GET | Retrieve a commitment from the Soroban contract |
+| `/onchain/receipt` | GET | Retrieve a receipt from the Soroban contract |
+| `/onchain/register-receipt` | POST | Register a receipt on the Soroban contract |
 
 The API is a thin transport layer. All logic lives in the deterministic
 core. The API never modifies verdicts, seals, or evidence. Input
@@ -347,7 +372,7 @@ uvicorn proof.api:app --reload
 
 ### MCP server (stdio)
 
-The MCP server exposes four tools for AI agents:
+The MCP server exposes eight tools for AI agents:
 
 | Tool | Description |
 |---|---|
@@ -355,6 +380,10 @@ The MCP server exposes four tools for AI agents:
 | `verify_dispute` | Verify a dispute between two claims |
 | `issue_receipt` | Issue a receipt from a verified bundle |
 | `compute_commitment_hash` | Compute a commitment hash from payment terms |
+| `register_commitment` | Register a commitment on the Soroban contract |
+| `get_onchain_commitment` | Retrieve a commitment from the Soroban contract |
+| `register_onchain_receipt` | Register a receipt on the Soroban contract |
+| `get_onchain_receipt` | Retrieve a receipt from the Soroban contract |
 
 The MCP server is a thin transport layer. It never modifies verdicts,
 seals, or evidence. All logic lives in the deterministic core.
@@ -395,3 +424,19 @@ python -m proof.mcp_server
   `test_verifier.py::test_tampered_*`.
 - **Fail closed:** if any error path returns VERIFIED, the security
   invariant is violated. Test: `test_adjudicator.py::test_failed_*`.
+
+## Protocol freeze
+
+The PROOF protocol and Soroban contract are frozen as of this commit.
+No changes to the contract interface, the commitment hash computation,
+the evidence bundle schema, or the verdict semantics will be made
+before the hackathon deadline. Bug fixes, tests, and deployment wiring
+are allowed; new product capabilities are not.
+
+Frozen components:
+- Soroban contract: `proof-registry` v0.1.0 (Testnet ID above)
+- Commitment hash: `SHA-256(canonical(CommitmentTerms))` — version 1
+- Evidence bundle schema: version 1 (claim, evidence, checks, verdict,
+  scope_notes, seal, chain_of_custody, optional commitment)
+- Verdicts: VERIFIED, NOT_VERIFIED, INSUFFICIENT_EVIDENCE
+- Check statuses: PASS, FAIL, ABSTAIN

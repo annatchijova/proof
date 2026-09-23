@@ -3,13 +3,27 @@ commitment.py — Payment commitments registered on-chain.
 
 A commitment is a pre-registered expectation of a payment. Before the
 payment happens, someone registers a hash of the expected payment terms
-on the Stellar ledger (via a manage_data operation). When the payment
-later occurs, PROOF can verify not just that the payment happened, but
-that it matches what was committed.
+on the Stellar ledger. When the payment later occurs, PROOF can verify
+not just that the payment happened, but that it matches what was
+committed.
 
 The commitment hash is SHA-256(canonical(commitment_terms)). The terms
 include: sender, recipient, asset_code, asset_issuer, amount_stroops,
-reference. This hash is stored on-chain as a manage_data value.
+reference.
+
+PROOF supports two on-chain commitment mechanisms:
+
+1. Soroban contract (PRIMARY): the proof-registry contract provides
+   require_auth(), enforced immutability (panic on overwrite), and
+   on-chain temporal order verification. This is the recommended path.
+
+2. manage_data (FALLBACK): native Stellar manage_data operations store
+   the commitment hash as a key-value pair. This works on all Stellar
+   accounts without Soroban, but lacks auth enforcement, immutability,
+   and temporal order verification.
+
+The commitment hash computation (CommitmentTerms.commitment_hash) is
+identical for both mechanisms. The difference is only in the transport.
 
 A receipt is the inverse: after PROOF verifies a payment, it can issue
 a receipt (the seal of the evidence bundle) that can be registered

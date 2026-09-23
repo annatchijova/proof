@@ -22,8 +22,8 @@ class _MockParams:
 
 
 @pytest.mark.asyncio
-async def test_list_tools_returns_four_tools():
-    """Invariant: the MCP server exposes exactly four tools.
+async def test_list_tools_returns_eight_tools():
+    """Invariant: the MCP server exposes exactly eight tools.
 
     Mutation caught: if a tool were removed or renamed, the count
     or names would change.
@@ -34,7 +34,11 @@ async def test_list_tools_returns_four_tools():
     assert "verify_dispute" in tool_names
     assert "issue_receipt" in tool_names
     assert "compute_commitment_hash" in tool_names
-    assert len(tool_names) == 4
+    assert "register_commitment" in tool_names
+    assert "get_onchain_commitment" in tool_names
+    assert "register_onchain_receipt" in tool_names
+    assert "get_onchain_receipt" in tool_names
+    assert len(tool_names) == 8
 
 
 @pytest.mark.asyncio

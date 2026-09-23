@@ -5,10 +5,14 @@ Exposes PROOF's verification capabilities as MCP tools so AI agents
 can verify Stellar payment claims without running the full pipeline.
 
 Tools:
-  verify_payment    — verify a single payment claim
-  verify_dispute     — verify a dispute between two claims
-  issue_receipt      — issue a receipt from a verified bundle
-  compute_commitment_hash — compute a commitment hash from payment terms
+  verify_payment           — verify a single payment claim
+  verify_dispute            — verify a dispute between two claims
+  issue_receipt             — issue a receipt from a verified bundle
+  compute_commitment_hash   — compute a commitment hash from payment terms
+  register_commitment       — register a commitment on the Soroban contract
+  get_onchain_commitment    — retrieve a commitment from the Soroban contract
+  register_onchain_receipt  — register a receipt on the Soroban contract
+  get_onchain_receipt       — retrieve a receipt from the Soroban contract
 
 The MCP server is a thin transport layer. All logic lives in the
 deterministic core. The server never modifies verdicts, seals, or evidence.
@@ -148,8 +152,8 @@ def _tool_definitions() -> list[Tool]:
             name="compute_commitment_hash",
             description=(
                 "Compute a commitment hash from payment terms. This is the "
-                "hash that would be registered on-chain via a manage_data "
-                "operation before the payment occurs."
+                "hash that would be registered on-chain (via the Soroban "
+                "contract or manage_data) before the payment occurs."
             ),
             inputSchema={
                 "type": "object",
@@ -162,6 +166,74 @@ def _tool_definitions() -> list[Tool]:
                     "reference": {"type": "string", "description": "Reference (e.g. invoice number)"},
                 },
                 "required": ["sender", "recipient", "asset_code", "amount_stroops"],
+            },
+        ),
+        Tool(
+            name="register_commitment",
+            description=(
+                "Register a commitment on the PROOF Soroban contract on Testnet. "
+                "The commitment hash is computed from the payment terms and "
+                "registered on-chain. The commitment is immutable — it cannot "
+                "be overwritten. Requires the stellar CLI to be installed."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "committer": {"type": "string", "description": "Stellar address of the committer (G...)"},
+                    "reference": {"type": "string", "description": "Reference string (e.g. invoice number)"},
+                    "sender": {"type": "string", "description": "Expected sender address (G...)"},
+                    "recipient": {"type": "string", "description": "Expected recipient address (G...)"},
+                    "asset_code": {"type": "string", "description": "Asset code (e.g. XLM, USDC)"},
+                    "asset_issuer": {"type": "string", "description": "Asset issuer address (omit for XLM)"},
+                    "amount_stroops": {"type": "integer", "description": "Amount in stroops"},
+                },
+                "required": ["committer", "reference", "sender", "recipient", "asset_code", "amount_stroops"],
+            },
+        ),
+        Tool(
+            name="get_onchain_commitment",
+            description=(
+                "Retrieve a commitment from the PROOF Soroban contract by reference. "
+                "Returns the commitment hash, committer, ledger, and timestamp."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "reference": {"type": "string", "description": "The commitment reference (e.g. invoice number)"},
+                },
+                "required": ["reference"],
+            },
+        ),
+        Tool(
+            name="register_onchain_receipt",
+            description=(
+                "Register a receipt on the PROOF Soroban contract after verification. "
+                "The receipt contains the transaction hash, seal, and verdict. "
+                "Requires the stellar CLI to be installed."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "bundle": {
+                        "type": "object",
+                        "description": "A verified evidence bundle (dict)",
+                    },
+                },
+                "required": ["bundle"],
+            },
+        ),
+        Tool(
+            name="get_onchain_receipt",
+            description=(
+                "Retrieve a receipt from the PROOF Soroban contract by transaction hash. "
+                "Returns the seal, verdict, ledger, and timestamp."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "transaction_hash": {"type": "string", "description": "64-char hex transaction hash"},
+                },
+                "required": ["transaction_hash"],
             },
         ),
     ]
@@ -233,6 +305,101 @@ async def _handle_call_tool(ctx, params) -> CallToolResult:
                     reference=arguments.get("reference"),
                 )
             }
+
+        elif name == "register_commitment":
+            from .commitment import CommitmentTerms
+            from .soroban_client import register_commitment as _reg_commit
+
+            terms = CommitmentTerms(
+                sender=arguments["sender"],
+                recipient=arguments["recipient"],
+                asset_code=arguments["asset_code"],
+                asset_issuer=arguments.get("asset_issuer"),
+                amount_stroops=arguments["amount_stroops"],
+                reference=arguments["reference"],
+            )
+            commitment_hash = terms.commitment_hash()
+            on_chain = _reg_commit(
+                committer=arguments["committer"],
+                reference=arguments["reference"],
+                commitment_hash=commitment_hash,
+            )
+            result = {
+                "status": "committed",
+                "commitment_hash": commitment_hash,
+                "on_chain": {
+                    "reference": on_chain.reference,
+                    "commitment_hash": on_chain.commitment_hash,
+                    "committer": on_chain.committer,
+                    "ledger": on_chain.ledger,
+                    "timestamp": on_chain.timestamp,
+                },
+            }
+
+        elif name == "get_onchain_commitment":
+            from .soroban_client import get_commitment as _get_commit
+
+            on_chain = _get_commit(arguments["reference"])
+            if on_chain is None:
+                result = {"status": "not_found", "reference": arguments["reference"]}
+            else:
+                result = {
+                    "reference": on_chain.reference,
+                    "commitment_hash": on_chain.commitment_hash,
+                    "committer": on_chain.committer,
+                    "ledger": on_chain.ledger,
+                    "timestamp": on_chain.timestamp,
+                }
+
+        elif name == "register_onchain_receipt":
+            from .soroban_client import register_receipt as _reg_receipt
+            import os
+
+            bundle_dict = arguments["bundle"]
+            bundle = EvidenceBundle(
+                version=bundle_dict["version"],
+                claim=bundle_dict["claim"],
+                evidence=bundle_dict["evidence"],
+                checks=bundle_dict["checks"],
+                verdict=bundle_dict["verdict"],
+                scope_notes=bundle_dict.get("scope_notes", []),
+                seal=bundle_dict["seal"],
+                chain_of_custody=bundle_dict.get("chain_of_custody", {}),
+                commitment=bundle_dict.get("commitment"),
+            )
+            tx_hash = bundle_dict.get("claim", {}).get("transaction_hash", "")
+            registrar = os.environ.get("PROOF_STELLAR_SOURCE", "alice")
+            on_chain = _reg_receipt(
+                registrar=registrar,
+                transaction_hash=tx_hash,
+                seal=bundle.seal,
+                verdict=bundle.verdict,
+            )
+            result = {
+                "status": "registered",
+                "on_chain": {
+                    "transaction_hash": on_chain.transaction_hash,
+                    "seal": on_chain.seal,
+                    "verdict": on_chain.verdict,
+                    "ledger": on_chain.ledger,
+                    "timestamp": on_chain.timestamp,
+                },
+            }
+
+        elif name == "get_onchain_receipt":
+            from .soroban_client import get_receipt as _get_receipt
+
+            on_chain = _get_receipt(arguments["transaction_hash"])
+            if on_chain is None:
+                result = {"status": "not_found", "transaction_hash": arguments["transaction_hash"]}
+            else:
+                result = {
+                    "transaction_hash": on_chain.transaction_hash,
+                    "seal": on_chain.seal,
+                    "verdict": on_chain.verdict,
+                    "ledger": on_chain.ledger,
+                    "timestamp": on_chain.timestamp,
+                }
 
         else:
             return CallToolResult(

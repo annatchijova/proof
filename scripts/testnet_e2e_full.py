@@ -97,8 +97,11 @@ def main() -> None:
     # ================================================================
     print("--- PATH A: Verification path ---\n")
 
-    # Step 1: Generate keypairs.
+    # Step 1: Generate keypairs and a unique reference.
+    import time as _time
+    reference = f"INV-TEST-{int(_time.time()) % 1000000}"
     print("A1. Generating keypairs...")
+    print(f"   Reference: {reference}")
     sender_kp = Keypair.random()
     recipient_kp = Keypair.random()
     sender = sender_kp.public_key
@@ -127,7 +130,7 @@ def main() -> None:
             destination=recipient,
             starting_balance=amount,
         )
-        .add_text_memo("INV-TEST-184")
+        .add_text_memo(reference)
         .set_timeout(30)
         .build()
     )
@@ -148,7 +151,7 @@ def main() -> None:
         recipient=recipient,
         asset_code="XLM",
         amount_stroops=1000000000,
-        reference="INV-TEST-184",
+        reference=reference,
     )
     bundle = verify_payment(claim, network="testnet")
 
@@ -198,7 +201,7 @@ def main() -> None:
         asset_code="XLM",
         asset_issuer=None,
         amount_stroops=1000000000,
-        reference="INV-TEST-184",
+        reference=reference,
     )
     commitment_hash = terms.commitment_hash()
     print(f"   Commitment hash: {commitment_hash}")
@@ -213,7 +216,7 @@ def main() -> None:
     result = invoke_contract(
         "register_commitment",
         "--committer", alice_address,
-        "--reference", "INV-TEST-184",
+        "--reference", reference,
         "--commitment_hash", commitment_hash_hex,
     )
     print(f"   Result: {result}")
@@ -222,7 +225,7 @@ def main() -> None:
     print("\nB3. Retrieving commitment from Soroban contract...")
     result = invoke_contract(
         "get_commitment",
-        "--reference", "INV-TEST-184",
+        "--reference", reference,
         send=False,
     )
     print(f"   Retrieved: {result}")
@@ -273,7 +276,7 @@ def main() -> None:
     print("\nB6. Verifying temporal order on-chain...")
     result = invoke_contract(
         "verify_temporal_order",
-        "--reference", "INV-TEST-184",
+        "--reference", reference,
         "--transaction_hash", tx_hash,
         send=False,
     )
@@ -315,7 +318,7 @@ def main() -> None:
     print()
     print("  Commands to independently inspect:")
     print(f"    stellar contract invoke --source alice --network testnet \\")
-    print(f"      --id {CONTRACT_ID} -- get_commitment --reference INV-TEST-184")
+    print(f"      --id {CONTRACT_ID} -- get_commitment --reference {reference}")
     print(f"    stellar contract invoke --source alice --network testnet \\")
     print(f"      --id {CONTRACT_ID} -- get_receipt --transaction_hash {tx_hash}")
     print(f"    curl -s 'https://horizon-testnet.stellar.org/transactions/{tx_hash}' | python3 -m json.tool")
