@@ -8,6 +8,7 @@ build/
 .pytest_cache/
 .coverage
 *.db
+PLAN.md
 
 # Secrets and Stellar identities — never commit
 *.seed
