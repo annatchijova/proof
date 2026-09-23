@@ -51,3 +51,11 @@ def test_icon_and_control_buttons_have_accessible_names() -> None:
     parser = _parse_ui()
     assert parser.attributes_by_id["lang_btn"]["aria-label"] == "Switch language"
     assert parser.attributes_by_id["theme_btn"]["aria-label"] == "Switch color theme"
+
+
+def test_ledger_derived_values_are_not_interpreted_as_html() -> None:
+    """Dynamic bundle fields must use textContent, not an HTML sink."""
+    assert "scopeDiv.innerHTML" not in _INDEX_HTML
+    assert "tr.innerHTML" not in _INDEX_HTML
+    assert "nameCell.textContent = check.name" in _INDEX_HTML
+    assert "detailCell.textContent = check.detail" in _INDEX_HTML

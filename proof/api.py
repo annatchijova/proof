@@ -616,7 +616,7 @@ function showResult(bundle) {
 
   const scopeDiv = document.getElementById('scope');
   if (bundle.scope_notes && bundle.scope_notes.length > 0) {
-    scopeDiv.innerHTML = '<br>' + bundle.scope_notes.map(n => t.note_prefix + n).join('<br>');
+    scopeDiv.textContent = bundle.scope_notes.map(n => t.note_prefix + n).join('\\n');
   } else {
     scopeDiv.textContent = '';
   }
@@ -625,9 +625,16 @@ function showResult(bundle) {
   tbody.innerHTML = '';
   for (const check of bundle.checks) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + check.name + '</td>' +
-      '<td class="status-' + check.status + '">' + check.status + '</td>' +
-      '<td>' + (check.detail || '') + '</td>';
+    const nameCell = document.createElement('td');
+    nameCell.textContent = check.name || '';
+    const statusCell = document.createElement('td');
+    statusCell.textContent = check.status || '';
+    if (['PASS', 'FAIL', 'ABSTAIN'].includes(check.status)) {
+      statusCell.className = 'status-' + check.status;
+    }
+    const detailCell = document.createElement('td');
+    detailCell.textContent = check.detail || '';
+    tr.append(nameCell, statusCell, detailCell);
     tbody.appendChild(tr);
   }
 
