@@ -1,6 +1,6 @@
 # PROOF
 
-[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md)
+[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md)
 
 ## El problema
 
@@ -184,6 +184,8 @@ fallen naturalmente sin filtrar semántica del protocolo. Esto preserva el
 modelo de autorización congelado — sin atajos para la demo.
 
 ### Opción 2: Web UI local
+
+Para instrucciones de instalación completas, ver [INSTALL.md](INSTALL.md).
 
 ```bash
 cd proof

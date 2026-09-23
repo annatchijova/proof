@@ -1,6 +1,6 @@
 # PROOF
 
-**English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Product Validation](docs/PRODUCT_VALIDATION.md)
+**English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Install](INSTALL.md) | [Product Validation](docs/PRODUCT_VALIDATION.md)
 
 ## The problem
 
@@ -183,6 +183,8 @@ without leaking protocol semantics. This preserves the frozen authorization
 model — no shortcuts for the demo.
 
 ### Option 2: Local Web UI
+
+For full installation instructions, see [INSTALL.md](INSTALL.md).
 
 ```bash
 cd proof
