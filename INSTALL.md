@@ -123,7 +123,11 @@ python -m pytest tests/ -v
 adjudication, tamper detection, determinism, multi-operation
 extraction, path payments, account merge, memo types, commitment
 hashing, receipt issuance, dispute resolution, API/MCP boundary
-validation, and Stellar client error handling.
+ validation, and Stellar client error handling.
+
+For a recorded clean-room check using a fresh shallow clone, see
+[`docs/fresh-clone-reproducibility.md`](docs/fresh-clone-reproducibility.md).
+That check also starts the API and verifies `/health`.
 
 ### End-to-end against real Testnet
 
@@ -284,6 +288,10 @@ python scripts/testnet_e2e.py
 
 Este script genera keypairs reales, fondea una cuenta vía Friendbot,
 envía un pago real a Testnet, y lo verifica con PROOF end-to-end.
+
+Para el chequeo documentado desde un clone limpio, ver
+[`docs/fresh-clone-reproducibility.md`](docs/fresh-clone-reproducibility.md).
+También inicia la API y verifica `/health`.
 
 ### Dependencias
 
