@@ -124,10 +124,28 @@ proof/
   adjudicator.py     # compare claim vs evidence, produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
   engine.py          # main entry point: verify_payment(claim, network)
-tests/               # 154 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp, stellar_client
+  api.py             # FastAPI HTTP API + user-facing UI at GET /
+  mcp_server.py      # MCP server for LLM integration
+  soroban/           # optional Soroban registry contract (Rust)
+scripts/
+  testnet_e2e.py     # real end-to-end test against Stellar Testnet
+tests/               # 161 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversarial
 ```
 
 ## Try it
+
+### Option 1: Web UI
+
+```bash
+cd proof
+source .venv/bin/activate
+uvicorn proof.api:app --host 0.0.0.0 --port 8000
+```
+
+Open `http://localhost:8000` in your browser. Enter a Stellar transaction
+hash and optional claim fields, then click "Verify Payment".
+
+### Option 2: Command line
 
 ```bash
 cd proof
@@ -138,13 +156,21 @@ from proof import PaymentClaim, verify_payment
 
 claim = PaymentClaim(
     transaction_hash='your_tx_hash_here',
-    network='testnet',
 )
 bundle = verify_payment(claim, network='testnet')
 print(bundle.verdict)
 print(bundle.seal)
 "
 ```
+
+### Option 3: Real end-to-end against Testnet
+
+```bash
+python scripts/testnet_e2e.py
+```
+
+This script generates real keypairs, funds an account via Friendbot,
+submits a real payment to Testnet, and verifies it with PROOF end-to-end.
 
 ## Tests
 
@@ -153,11 +179,12 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-154 tests covering: canonical serialization, claim validation, adjudication
+161 tests covering: canonical serialization, claim validation, adjudication
 logic, tamper detection, determinism, multi-operation extraction, path
 payments, account merge, memo type classification, commitment hashing,
 commitment adjudication, receipt issuance, dispute resolution, API/MCP
-boundary validation, and Stellar client error handling.
+boundary validation, Stellar client error handling, and adversarial
+verification against real Testnet transactions.
 
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md).

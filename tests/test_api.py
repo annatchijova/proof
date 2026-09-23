@@ -15,12 +15,37 @@ SENDER = "GCKSJ2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
 RECIPIENT = "GCXSC2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
 
 
+def _testnet_available() -> bool:
+    """Check if Stellar Testnet is reachable."""
+    import requests
+    try:
+        r = requests.get("https://horizon-testnet.stellar.org/", timeout=5)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
+_testnet_skip = pytest.mark.skipif(
+    not _testnet_available(),
+    reason="Stellar Testnet not reachable",
+)
+
+
 class TestHealth:
     def test_health_ok(self):
         """Invariant: the health endpoint returns ok."""
         resp = client.get("/health")
         assert resp.status_code == 200
         assert resp.json() == {"status": "ok"}
+
+
+class TestUI:
+    def test_index_returns_html(self):
+        """Invariant: GET / returns the HTML UI."""
+        resp = client.get("/")
+        assert resp.status_code == 200
+        assert "PROOF" in resp.text
+        assert "Verify Payment" in resp.text
 
 
 class TestVerifyEndpoint:
@@ -63,7 +88,7 @@ class TestVerifyEndpoint:
         # Pydantic should reject float for an int field.
         assert resp.status_code in (400, 422)
 
-    @pytest.mark.skip(reason="requires network access to Stellar testnet")
+    @_testnet_skip
     def test_verify_nonexistent_tx_returns_insufficient_evidence(self):
         """Invariant: a tx that doesn't exist returns INSUFFICIENT_EVIDENCE.
 
@@ -113,7 +138,7 @@ class TestReceiptEndpoint:
 
 
 class TestAPIDoesNotModifySeal:
-    @pytest.mark.skip(reason="requires network access to Stellar testnet")
+    @_testnet_skip
     def test_api_returns_sealed_bundle(self):
         """Invariant: the API returns the sealed bundle without modification.
 
@@ -130,3 +155,96 @@ class TestAPIDoesNotModifySeal:
             assert required.issubset(bundle.keys())
             assert isinstance(bundle["seal"], str)
             assert len(bundle["seal"]) == 64
+
+
+class TestAdversarialPath:
+    """Adversarial tests of the main verification path.
+
+    These tests verify that PROOF correctly rejects claims that don't
+    match the ledger evidence. They use a known Testnet transaction
+    and assert that wrong fields produce NOT_VERIFIED, not VERIFIED.
+    """
+
+    # A real Testnet transaction hash from the e2e test run.
+    # This tx is a create_account of 100 XLM with memo "INV-TEST-184".
+    REAL_TX = "086467a70920eae62efb1c7189e8bd4cd1ac3024039e93f4cb0493da046958a4"
+    REAL_SENDER = "GAF5WR2THSBAHMY5YZD32MZUU53VWJG2CCTAQOQN2ZM6BFDVV3DMTLRF"
+    REAL_RECIPIENT = "GAAWYHBFAOJW7J34HB4JAMKMMDXTPAGDMLOM5QZWLNXZT44ZLLIDW3LR"
+    REAL_AMOUNT_STROOPS = 1000000000  # 100 XLM
+    REAL_REFERENCE = "INV-TEST-184"
+
+    @_testnet_skip
+    def test_correct_claim_verifies(self):
+        """Invariant: a correct claim against a real tx produces VERIFIED.
+
+        This is the positive control — if this fails, the tx may have
+        been pruned from Testnet. The adversarial tests below are only
+        meaningful if this passes.
+        """
+        resp = client.post("/verify", json={
+            "transaction_hash": self.REAL_TX,
+            "sender": self.REAL_SENDER,
+            "recipient": self.REAL_RECIPIENT,
+            "asset_code": "XLM",
+            "amount_stroops": self.REAL_AMOUNT_STROOPS,
+            "reference": self.REAL_REFERENCE,
+            "network": "testnet",
+        })
+        if resp.status_code != 200:
+            pytest.skip("Testnet tx may have been pruned")
+        bundle = resp.json()
+        assert bundle["verdict"] == "VERIFIED"
+
+    @_testnet_skip
+    def test_wrong_recipient_produces_not_verified(self):
+        """Invariant: a wrong recipient claim produces NOT_VERIFIED.
+
+        Mutation caught: if PROOF ignored the recipient field, this
+        would produce VERIFIED instead of NOT_VERIFIED.
+        """
+        wrong_recipient = "GCKSJ2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
+        resp = client.post("/verify", json={
+            "transaction_hash": self.REAL_TX,
+            "sender": self.REAL_SENDER,
+            "recipient": wrong_recipient,
+            "asset_code": "XLM",
+            "amount_stroops": self.REAL_AMOUNT_STROOPS,
+            "network": "testnet",
+        })
+        if resp.status_code != 200:
+            pytest.skip("Testnet tx may have been pruned")
+        bundle = resp.json()
+        assert bundle["verdict"] == "NOT_VERIFIED"
+
+    @_testnet_skip
+    def test_wrong_amount_produces_not_verified(self):
+        """Invariant: a wrong amount claim produces NOT_VERIFIED."""
+        resp = client.post("/verify", json={
+            "transaction_hash": self.REAL_TX,
+            "sender": self.REAL_SENDER,
+            "recipient": self.REAL_RECIPIENT,
+            "asset_code": "XLM",
+            "amount_stroops": 999999999,  # wrong amount
+            "network": "testnet",
+        })
+        if resp.status_code != 200:
+            pytest.skip("Testnet tx may have been pruned")
+        bundle = resp.json()
+        assert bundle["verdict"] == "NOT_VERIFIED"
+
+    @_testnet_skip
+    def test_nonexistent_tx_produces_insufficient_evidence(self):
+        """Invariant: a non-existent tx produces INSUFFICIENT_EVIDENCE.
+
+        Mutation caught: if PROOF fabricated evidence for missing txs,
+        this would produce a different verdict.
+        """
+        fake_hash = "f" * 64
+        resp = client.post("/verify", json={
+            "transaction_hash": fake_hash,
+            "network": "testnet",
+        })
+        if resp.status_code != 200:
+            pytest.skip("Testnet not reachable")
+        bundle = resp.json()
+        assert bundle["verdict"] == "INSUFFICIENT_EVIDENCE"

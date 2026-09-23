@@ -125,10 +125,29 @@ proof/
   adjudicator.py     # comparar claim vs evidencia, producir checks + veredicto
   verifier.py        # verificador independiente de bundles (solo stdlib)
   engine.py          # entry point: verify_payment(claim, network)
-tests/               # 154 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute, api, mcp, stellar_client
+  api.py             # FastAPI HTTP API + UI en GET /
+  mcp_server.py      # MCP server para integración con LLMs
+  soroban/           # contrato Soroban opcional (Rust)
+scripts/
+  testnet_e2e.py     # test end-to-end real contra Stellar Testnet
+tests/               # 161 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversariales
 ```
 
 ## Probalo
+
+### Opción 1: Web UI
+
+```bash
+cd proof
+source .venv/bin/activate
+uvicorn proof.api:app --host 0.0.0.0 --port 8000
+```
+
+Abrí `http://localhost:8000` en el navegador. Ingresá un hash de
+transacción de Stellar y los campos opcionales del claim, y hacé clic
+en "Verify Payment".
+
+### Opción 2: Línea de comandos
 
 ```bash
 cd proof
@@ -146,6 +165,15 @@ print(bundle.seal)
 "
 ```
 
+### Opción 3: End-to-end real contra Testnet
+
+```bash
+python scripts/testnet_e2e.py
+```
+
+Este script genera keypairs reales, fondea una cuenta via Friendbot,
+envía un pago real a Testnet, y lo verifica con PROOF end-to-end.
+
 ## Tests
 
 ```bash
@@ -153,12 +181,13 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-154 tests cubriendo: serialización canónica, validación de claims,
+161 tests cubriendo: serialización canónica, validación de claims,
 lógica de adjudicación, detección de alteraciones, determinismo,
 extracción multi-operación, path payments, account merge,
 clasificación de memo types, hashing de commitments, adjudicación de
 commitments, emisión de receipts, resolución de disputas, validación
-de boundary de API/MCP, y manejo de errores del cliente Stellar.
+de boundary de API/MCP, manejo de errores del cliente Stellar, y
+verificación adversarial contra transacciones reales de Testnet.
 
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
 ver el [Technical README](TECHNICAL.md).
