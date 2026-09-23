@@ -258,6 +258,7 @@ verificación adversarial contra transacciones reales de Testnet.
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
 ver el [Technical README](TECHNICAL.md). Para un ejemplo anotado campo por
 campo, ver el [EvidenceBundle anotado](docs/evidence-bundle-example.md).
+Para ver la detección de tampering, ejecutá `python scripts/tamper_demo.py`.
 
 ## Screenshots
 
