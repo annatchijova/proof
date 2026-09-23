@@ -256,7 +256,8 @@ de boundary de API/MCP, manejo de errores del cliente Stellar, y
 verificación adversarial contra transacciones reales de Testnet.
 
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
-ver el [Technical README](TECHNICAL.md).
+ver el [Technical README](TECHNICAL.md). Para un ejemplo anotado campo por
+campo, ver el [EvidenceBundle anotado](docs/evidence-bundle-example.md).
 
 ## Screenshots
 

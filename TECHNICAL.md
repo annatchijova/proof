@@ -94,6 +94,9 @@ The sealed output. The `sealed_payload` (version, claim, evidence, checks,
 verdict, scope_notes) is what gets hashed. The `chain_of_custody` is
 metadata stored beside the seal, not inside it.
 
+See the [annotated EvidenceBundle example](docs/evidence-bundle-example.md)
+for a compact bundle with the seal boundary called out explicitly.
+
 ## Canonical serialization
 
 The canonicalizer (`canonicalize.py`) is the single source of truth for

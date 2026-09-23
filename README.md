@@ -253,7 +253,8 @@ boundary validation, Stellar client error handling, and adversarial
 verification against real Testnet transactions.
 
 For the full architecture, threat model, and design decisions, see the
-[Technical README](TECHNICAL.md).
+[Technical README](TECHNICAL.md). For a field-by-field bundle example, see
+the [annotated EvidenceBundle](docs/evidence-bundle-example.md).
 
 ## Screenshots
 
