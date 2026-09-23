@@ -118,11 +118,42 @@ _INDEX_HTML = """<!DOCTYPE html>
     font-weight: 600;
   }
   .toggle:hover { border-color: var(--blue); }
-  .toggle.active { background: var(--blue); color: var(--bg); border-color: var(--blue); }
+  .repo-link {
+    display: inline-flex; align-items: center; gap: 0.3rem; color: var(--blue);
+    text-decoration: none; font-size: 0.85rem; font-weight: 600;
+  }
+  .repo-link:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block; background: rgba(88,166,255,0.15); color: var(--blue);
+    border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+    margin-left: 0.5rem; vertical-align: middle;
+  }
+
+  /* Hero flow */
+  .hero { margin-bottom: 2rem; }
+  .hero-flow {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    font-size: 0.9rem; color: var(--muted); margin: 0.8rem 0 1rem;
+  }
+  .hero-step {
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.4rem 0.7rem; color: var(--text); font-weight: 500;
+  }
+  .hero-arrow { color: var(--muted); font-weight: 700; }
+  .hero-cta { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .cta-btn {
+    background: var(--blue); color: var(--bg); border: none; border-radius: 6px;
+    padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: inline-block;
+  }
+  .cta-btn:hover { opacity: 0.9; }
+
+  /* Verifier form */
   .card {
     background: var(--card); border: 1px solid var(--border); border-radius: 8px;
     padding: 1.5rem; margin-bottom: 1.5rem; transition: background 0.2s, border 0.2s;
   }
+  .card h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--text); }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.3rem; }
   input, select {
     width: 100%; padding: 0.6rem; background: var(--input-bg); border: 1px solid var(--border);
@@ -159,26 +190,25 @@ _INDEX_HTML = """<!DOCTYPE html>
   .scope { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
   .row { display: flex; gap: 1rem; }
   .row > div { flex: 1; }
+
+  /* Testnet evidence */
+  .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.8rem; }
+  .evidence-item { font-size: 0.8rem; }
+  .evidence-item .label { color: var(--muted); }
+  .evidence-item .value { font-family: monospace; color: var(--text); word-break: break-all; }
+  .evidence-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .evidence-links a { color: var(--blue); font-size: 0.8rem; text-decoration: none; }
+  .evidence-links a:hover { text-decoration: underline; }
+
+  /* Secondary explanation */
+  .section { margin-bottom: 1.5rem; }
+  .section h2 { font-size: 0.95rem; color: var(--text); margin-bottom: 0.5rem; }
+  .section p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
   .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-  .info-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    padding: 1rem; transition: background 0.2s, border 0.2s;
-  }
-  .info-card h3 { font-size: 0.85rem; color: var(--blue); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .info-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
-  .repo-link {
-    display: inline-flex; align-items: center; gap: 0.3rem; color: var(--blue);
-    text-decoration: none; font-size: 0.85rem; font-weight: 600;
-  }
-  .repo-link:hover { text-decoration: underline; }
-  .badge {
-    display: inline-block; background: rgba(88,166,255,0.15); color: var(--blue);
-    border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.7rem; font-weight: 600;
-    margin-left: 0.5rem; vertical-align: middle;
-  }
+
   @media (max-width: 600px) {
-    .info-grid { grid-template-columns: 1fr; }
+    .evidence-grid { grid-template-columns: 1fr; }
+    .hero-flow { font-size: 0.8rem; }
   }
 </style>
 </head>
@@ -197,26 +227,24 @@ _INDEX_HTML = """<!DOCTYPE html>
     </div>
   </div>
 
-  <div class="info-grid">
-    <div class="info-card">
-      <h3 data-i18n="info_what_h"></h3>
-      <p data-i18n="info_what_p"></p>
+  <div class="hero">
+    <div class="hero-flow">
+      <span class="hero-step" data-i18n="hero_claim"></span>
+      <span class="hero-arrow">&ne;</span>
+      <span class="hero-step" data-i18n="hero_evidence"></span>
+      <span class="hero-arrow">&rarr;</span>
+      <span class="hero-step">PROOF</span>
+      <span class="hero-arrow">&rarr;</span>
+      <span class="hero-step" data-i18n="hero_verify"></span>
     </div>
-    <div class="info-card">
-      <h3 data-i18n="info_why_h"></h3>
-      <p data-i18n="info_why_p"></p>
-    </div>
-    <div class="info-card">
-      <h3 data-i18n="info_stellar_h"></h3>
-      <p data-i18n="info_stellar_p"></p>
-    </div>
-    <div class="info-card">
-      <h3 data-i18n="info_diff_h"></h3>
-      <p data-i18n="info_diff_p"></p>
+    <div class="hero-cta">
+      <a class="cta-btn" href="#verifier" data-i18n="hero_cta"></a>
+      <a class="repo-link" href="https://github.com/annatchijova/proof" target="_blank" rel="noopener" data-i18n="hero_repo"></a>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="verifier">
+    <h2 data-i18n="verifier_title"></h2>
     <label for="tx_hash" data-i18n="tx_hash_label"></label>
     <input type="text" id="tx_hash" data-i18n-ph="tx_hash_ph">
 
@@ -273,6 +301,30 @@ _INDEX_HTML = """<!DOCTYPE html>
     </div>
   </div>
 
+  <div class="card">
+    <h2 data-i18n="testnet_title"></h2>
+    <div class="evidence-grid">
+      <div class="evidence-item"><span class="label" data-i18n="ev_payment_ledger"></span><br><span class="value">4821215</span></div>
+      <div class="evidence-item"><span class="label" data-i18n="ev_commitment_ledger"></span><br><span class="value">4821217</span></div>
+      <div class="evidence-item"><span class="label" data-i18n="ev_receipt_ledger"></span><br><span class="value">4821218</span></div>
+      <div class="evidence-item"><span class="label" data-i18n="ev_seal"></span><br><span class="value">c6d21734...</span></div>
+    </div>
+    <div class="evidence-links">
+      <a href="https://horizon-testnet.stellar.org/transactions/0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669" target="_blank" rel="noopener" data-i18n="ev_link_tx"></a>
+      <a href="https://horizon-testnet.stellar.org/transactions/0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669/operations" target="_blank" rel="noopener" data-i18n="ev_link_ops"></a>
+      <a href="https://github.com/annatchijova/proof/blob/main/docs/testnet-validation-report.md" target="_blank" rel="noopener" data-i18n="ev_link_report"></a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 data-i18n="sec_stellar_h"></h2>
+    <p data-i18n="sec_stellar_p"></p>
+  </div>
+  <div class="section">
+    <h2 data-i18n="sec_diff_h"></h2>
+    <p data-i18n="sec_diff_p"></p>
+  </div>
+
   <div class="footer">
     <span data-i18n="footer"></span>
   </div>
@@ -282,14 +334,12 @@ const I18N = {
   en: {
     badge: 'Stellar Testnet',
     tagline: 'Someone sends you a screenshot saying they paid. PROOF verifies what actually happened — from the Stellar ledger, not from images.',
-    info_what_h: 'What it does',
-    info_what_p: 'Turns a payment claim into a deterministic verification against the Stellar ledger. Returns a sealed evidence bundle with a verdict: VERIFIED, NOT_VERIFIED, or INSUFFICIENT_EVIDENCE.',
-    info_why_h: 'Why',
-    info_why_p: 'A screenshot is an image, not evidence. It can be edited, fabricated, or taken from a different transaction. The ledger contains independently inspectable facts about what actually occurred.',
-    info_stellar_h: 'Why Stellar',
-    info_stellar_p: 'Stellar is a public ledger. Every transaction is independently verifiable by anyone, without trusting a private database or a third party. PROOF reads the ledger, not a screenshot.',
-    info_diff_h: 'How it differs',
-    info_diff_p: 'No AI. No probabilities. No "our advanced model detected...". Pure deterministic verification: the same input always produces the same sealed result, independently reproducible.',
+    hero_claim: 'Someone says they paid',
+    hero_evidence: 'claim ≠ evidence',
+    hero_verify: 'verify against Stellar',
+    hero_cta: 'Verify a payment',
+    hero_repo: 'View source on GitHub',
+    verifier_title: 'Verify a payment',
     tx_hash_label: 'Transaction hash (64-char hex)',
     tx_hash_ph: 'e.g. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Expected sender (G...) — optional',
@@ -310,19 +360,29 @@ const I18N = {
     error_prefix: 'Error: ',
     net_error: 'Network error: ',
     note_prefix: 'Note: ',
+    testnet_title: 'Live on Stellar Testnet',
+    ev_payment_ledger: 'Payment ledger',
+    ev_commitment_ledger: 'Commitment ledger',
+    ev_receipt_ledger: 'Receipt ledger',
+    ev_seal: 'Evidence seal',
+    ev_link_tx: 'Inspect transaction on Horizon',
+    ev_link_ops: 'Inspect operations',
+    ev_link_report: 'Validation report',
+    sec_stellar_h: 'Why Stellar',
+    sec_stellar_p: 'Stellar is the source of evidence: a public ledger where every transaction is independently verifiable by anyone. Soroban is the on-chain registry where PROOF commits sealed evidence — commitments and receipts are stored on-chain with enforced authorization and immutability.',
+    sec_diff_h: 'What makes PROOF different',
+    sec_diff_p: 'Claim-specific deterministic adjudication: the same input always produces the same sealed result. Sealed evidence bundles are tamper-evident and independently verifiable with a stdlib-only verifier. No probabilities, no model judgments, no screenshots.',
     footer: 'PROOF — deterministic Stellar payment verification. No AI, no probabilities, no screenshots.'
   },
   es: {
     badge: 'Stellar Testnet',
     tagline: 'Alguien te manda una captura diciendo que te pagó. PROOF verifica qué pasó realmente — desde el ledger de Stellar, no desde imágenes.',
-    info_what_h: 'Qué hace',
-    info_what_p: 'Convierte un claim de pago en una verificación determinista contra el ledger de Stellar. Devuelve un bundle de evidencia sellado con un veredicto: VERIFIED, NOT_VERIFIED, o INSUFFICIENT_EVIDENCE.',
-    info_why_h: 'Por qué',
-    info_why_p: 'Una captura es una imagen, no evidencia. Puede ser editada, fabricada, o sacada de otra transacción. El ledger contiene hechos verificables independientemente sobre qué pasó realmente.',
-    info_stellar_h: 'Por qué Stellar',
-    info_stellar_p: 'Stellar es un ledger público. Cada transacción es verificable por cualquiera, sin confiar en una base de datos privada ni en un tercero. PROOF lee el ledger, no una captura.',
-    info_diff_h: 'En qué se diferencia',
-    info_diff_p: 'Sin IA. Sin probabilidades. Sin "nuestro modelo avanzado detectó...". Verificación puramente determinista: la misma entrada siempre produce el mismo resultado sellado, reproducible independientemente.',
+    hero_claim: 'Alguien dice que pagó',
+    hero_evidence: 'claim ≠ evidencia',
+    hero_verify: 'verificar contra Stellar',
+    hero_cta: 'Verificar un pago',
+    hero_repo: 'Ver código en GitHub',
+    verifier_title: 'Verificar un pago',
     tx_hash_label: 'Hash de transacción (64 chars hex)',
     tx_hash_ph: 'ej. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Sender esperado (G...) — opcional',
@@ -343,6 +403,18 @@ const I18N = {
     error_prefix: 'Error: ',
     net_error: 'Error de red: ',
     note_prefix: 'Nota: ',
+    testnet_title: 'Activo en Stellar Testnet',
+    ev_payment_ledger: 'Ledger de pago',
+    ev_commitment_ledger: 'Ledger de commitment',
+    ev_receipt_ledger: 'Ledger de receipt',
+    ev_seal: 'Seal de evidencia',
+    ev_link_tx: 'Inspeccionar transacción en Horizon',
+    ev_link_ops: 'Inspeccionar operaciones',
+    ev_link_report: 'Reporte de validación',
+    sec_stellar_h: 'Por qué Stellar',
+    sec_stellar_p: 'Stellar es la fuente de evidencia: un ledger público donde cada transacción es verificable por cualquiera. Soroban es el registry on-chain donde PROOF commitea evidencia sellada — commitments y receipts se guardan on-chain con autorización e inmutabilidad enforced.',
+    sec_diff_h: 'Qué hace a PROOF diferente',
+    sec_diff_p: 'Adjudicación determinista específica al claim: la misma entrada siempre produce el mismo resultado sellado. Los bundles de evidencia sellados son tamper-evident y verificables independientemente con un verificador stdlib-only. Sin probabilidades, sin juicios de modelo, sin capturas.',
     footer: 'PROOF — verificación determinista de pagos Stellar. Sin IA, sin probabilidades, sin capturas.'
   }
 };
