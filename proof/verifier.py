@@ -65,20 +65,24 @@ def verify_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
             f"expected={CANONICALIZE_VERSION}"
         )
 
-    # Check verdict consistency: if any check has FAIL, verdict must be NOT_VERIFIED.
+    # Check verdict consistency against the three-state contract.
     checks = bundle.get("checks", [])
     has_fail = any(c.get("status") == "FAIL" for c in checks)
     verdict = bundle.get("verdict", "")
     verdict_consistent = True
-    if has_fail and verdict != "NOT_VERIFIED":
+    allowed_verdicts = {"VERIFIED", "NOT_VERIFIED", "INSUFFICIENT_EVIDENCE"}
+    if verdict not in allowed_verdicts:
+        verdict_consistent = False
+        issues.append(f"unknown verdict: {verdict!r}")
+    elif has_fail and verdict == "VERIFIED":
         verdict_consistent = False
         issues.append(
-            f"verdict inconsistent: checks contain FAIL but verdict is {verdict!r}"
+            "verdict inconsistent: checks contain FAIL but verdict is VERIFIED"
         )
-    if not has_fail and verdict == "NOT_VERIFIED":
+    elif not has_fail and verdict in ("NOT_VERIFIED", "INSUFFICIENT_EVIDENCE"):
         verdict_consistent = False
         issues.append(
-            "verdict inconsistent: no FAIL in checks but verdict is NOT_VERIFIED"
+            f"verdict inconsistent: no FAIL in checks but verdict is {verdict!r}"
         )
 
     return {

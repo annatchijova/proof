@@ -131,6 +131,32 @@ def test_inconsistent_verdict_detected():
     assert report["verdict_consistent"] is False
 
 
+def test_insufficient_evidence_with_failed_lookup_is_consistent():
+    """Invariant: inability to obtain evidence remains distinct from mismatch."""
+    bundle = _make_bundle(
+        verdict="INSUFFICIENT_EVIDENCE",
+        checks=[{
+            "name": "transaction_exists",
+            "status": "FAIL",
+            "expected": TX_HASH,
+            "actual": None,
+            "detail": "not found",
+        }],
+    )
+    report = verify_bundle(bundle)
+    assert report["seal_ok"] is True
+    assert report["verdict_consistent"] is True
+
+
+def test_unknown_verdict_is_rejected():
+    """Invariant: a valid seal cannot introduce a fourth verdict state."""
+    bundle = _make_bundle(verdict="BOGUS")
+    report = verify_bundle(bundle)
+    assert report["seal_ok"] is True
+    assert report["verdict_consistent"] is False
+    assert any("unknown verdict" in issue for issue in report["issues"])
+
+
 def test_chain_of_custody_outside_seal():
     """Invariant: modifying chain_of_custody does NOT break the seal.
 
