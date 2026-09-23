@@ -1,6 +1,6 @@
 # PROOF
 
-[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md)
+[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md)
 
 ## El problema
 
