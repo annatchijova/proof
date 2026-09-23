@@ -37,7 +37,7 @@ from mcp.types import (
 
 from .claim import PaymentClaim
 from .commitment import compute_commitment_hash
-from .engine import issue_receipt, verify_dispute, verify_payment
+from .engine import _validate_receipt_bundle, issue_receipt, verify_dispute, verify_payment
 from .evidence import EvidenceBundle
 
 
@@ -291,6 +291,7 @@ async def _handle_call_tool(ctx, params) -> CallToolResult:
                 chain_of_custody=bundle_dict.get("chain_of_custody", {}),
                 commitment=bundle_dict.get("commitment"),
             )
+            _validate_receipt_bundle(bundle)
             receipt_obj = issue_receipt(bundle)
             result = receipt_obj.to_dict()
 
@@ -367,6 +368,7 @@ async def _handle_call_tool(ctx, params) -> CallToolResult:
                 chain_of_custody=bundle_dict.get("chain_of_custody", {}),
                 commitment=bundle_dict.get("commitment"),
             )
+            _validate_receipt_bundle(bundle)
             tx_hash = bundle_dict.get("claim", {}).get("transaction_hash", "")
             registrar = os.environ.get("PROOF_STELLAR_SOURCE", "alice")
             on_chain = _reg_receipt(

@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field, field_validator
 
 from .claim import PaymentClaim
-from .engine import issue_receipt, verify_dispute, verify_payment
+from .engine import _validate_receipt_bundle, issue_receipt, verify_dispute, verify_payment
 
 app = FastAPI(
     title="PROOF — Payment Evidence, Not Screenshots",
@@ -717,7 +717,10 @@ def receipt(req: ReceiptRequest) -> dict[str, Any]:
         commitment=bundle_dict.get("commitment"),
     )
 
-    receipt_obj = issue_receipt(bundle)
+    try:
+        receipt_obj = issue_receipt(bundle)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     return receipt_obj.to_dict()
 
 
@@ -875,6 +878,11 @@ def register_onchain_receipt(req: ReceiptRequest) -> dict[str, Any]:
         chain_of_custody=bundle_dict.get("chain_of_custody", {}),
         commitment=bundle_dict.get("commitment"),
     )
+
+    try:
+        _validate_receipt_bundle(bundle)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
     tx_hash = bundle_dict.get("claim", {}).get("transaction_hash", "")
     if not tx_hash:

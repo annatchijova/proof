@@ -41,9 +41,11 @@ from .evidence import (
     INSUFFICIENT_EVIDENCE,
     EvidenceBundle,
     PaymentEvidence,
+    VERIFIED,
 )
 from .extractor import ExtractionError, extract_evidence
 from .stellar_client import StellarClient, StellarFetchError
+from .verifier import verify_bundle
 
 VERSION = "0.4.0"
 
@@ -172,12 +174,25 @@ def issue_receipt(bundle: EvidenceBundle) -> Receipt:
     of the evidence bundle. It can be registered on-chain via a manage_data
     operation with key=PROOF:RECEIPT:<tx_hash> and value=seal.
     """
+    _validate_receipt_bundle(bundle)
     return Receipt(
         transaction_hash=bundle.claim.get("transaction_hash", ""),
         verdict=bundle.verdict,
         seal=bundle.seal,
         issued_at=int(time.time()),
     )
+
+
+def _validate_receipt_bundle(bundle: EvidenceBundle) -> None:
+    """Require an independently valid VERIFIED bundle before a receipt."""
+    report = verify_bundle(bundle.to_dict())
+    if bundle.verdict != VERIFIED:
+        raise ValueError("receipts require a VERIFIED evidence bundle")
+    if not all(report[key] for key in ("seal_ok", "version_ok", "verdict_consistent")):
+        raise ValueError(
+            "receipt requires an independently verifiable bundle: "
+            + "; ".join(report["issues"])
+        )
 
 
 def _insufficient_evidence_bundle(
