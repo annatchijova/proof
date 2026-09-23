@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "proof"
+version = "0.1.0"
+description = "Payment Evidence, Not Screenshots — verify Stellar payment claims from the ledger, not from images."
+requires-python = ">=3.12"
+dependencies = [
+    "stellar-sdk>=12.0,<17.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["proof*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
