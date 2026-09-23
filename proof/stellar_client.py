@@ -60,6 +60,20 @@ class StellarClient:
         except Exception:
             return []
 
+    def fetch_effects(self, tx_hash: str) -> list[dict[str, Any]]:
+        """Fetch all effects for a transaction.
+
+        Effects are needed for account_merge operations, where the
+        transferred amount is not in the operation itself but in the
+        account_debited effect.
+        """
+        try:
+            response = self._server.effects().for_transaction(tx_hash).call()
+            records = response.get("_embedded", {}).get("records", [])
+            return [dict(r) for r in records]
+        except Exception:
+            return []
+
     def close(self) -> None:
         """Close the underlying HTTP client."""
         self._server.close()

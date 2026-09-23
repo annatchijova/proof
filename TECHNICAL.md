@@ -172,24 +172,36 @@ recomputes the seal from the bundle's fields and checks consistency.
 
 ## Supported operation types
 
-| Type | L1 support | Notes |
+| Type | L3 support | Notes |
 |---|---|---|
-| `payment` | Yes | Full extraction |
-| `create_account` | Yes | XLM, amount from starting_balance |
-| `path_payment_strict_receive` | Yes | Treated as payment |
-| `path_payment_strict_send` | Yes | Treated as payment |
-| `account_merge` | Partial | Amount not available from operations (L3) |
+| `payment` | Full | Single-asset transfer |
+| `create_account` | Full | XLM, amount from starting_balance |
+| `path_payment_strict_receive` | Full | Source + destination assets, both amounts |
+| `path_payment_strict_send` | Full | Source + destination assets, both amounts |
+| `account_merge` | Full | Amount from effects (account_debited) |
 
-## Known limitations (L1+L2)
+## Multi-operation transactions
 
-- **Account merge amount:** the Horizon API does not include the amount
-  in the operation; it must be looked up from effects. Currently set to
-  0 with a note. Fixed in L3.
-- **Multi-operation transactions:** only the first payment-type operation
-  is extracted. A transaction with multiple payments needs L3 handling.
-- **Path payments:** the source asset and destination asset may differ.
-  Currently only the destination asset is extracted. Full path payment
-  support is L3.
+L3 extracts ALL payment-type operations from a transaction, not just the
+first. Each operation is represented as a `PaymentOperation` in the
+`operations` list. The top-level fields (`sender`, `recipient`, `asset_code`,
+etc.) are convenience aliases for the first operation, preserving backward
+compatibility with L1/L2 callers.
+
+## Memo types
+
+L3 classifies memos into four types: `text`, `hash`, `return`, `none`.
+Reference matching only compares the claim's `reference` against the memo
+when `memo_type` is `text`. Hash and return memos are binary and don't have
+a string representation that a claim's reference field would match
+meaningfully — those produce ABSTAIN.
+
+## Known limitations (L3)
+
+- **Source asset claims:** the `PaymentClaim` does not yet have a
+  `source_asset_code` field. Path payment source assets are extracted and
+  reported in the evidence, but the adjudicator ABSTAINs on source asset
+  matching. Adding source asset assertions to claims is L4.
 - **No on-chain receipts:** L4 will add Stellar contract-based receipt
   registration.
 - **No API/MCP server:** L6 will expose verification as an API.

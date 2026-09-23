@@ -6,11 +6,22 @@ runs the bundle construction multiple times and asserts the seals match.
 """
 from proof.canonicalize import seal
 from proof.claim import PaymentClaim
-from proof.evidence import CheckResult, EvidenceBundle, PaymentEvidence
+from proof.evidence import CheckResult, EvidenceBundle, PaymentEvidence, PaymentOperation
 
 TX_HASH = "a" * 64
 SENDER = "GCKSJ2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
 RECIPIENT = "GCXSC2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
+
+
+def _make_op() -> PaymentOperation:
+    return PaymentOperation(
+        operation_type="payment",
+        sender=SENDER,
+        recipient=RECIPIENT,
+        asset_code="XLM",
+        asset_issuer=None,
+        amount_stroops=1000000000,
+    )
 
 
 def _build_bundle() -> dict:
@@ -34,7 +45,9 @@ def _build_bundle() -> dict:
         asset_issuer=None,
         amount_stroops=1000000000,
         memo="INV-184",
+        memo_type="text",
         operation_type="payment",
+        operations=[_make_op()],
     )
     checks = [
         CheckResult("transaction_exists", "PASS", TX_HASH, TX_HASH, "found"),
@@ -89,7 +102,8 @@ def test_seal_is_deterministic_with_shuffled_check_order():
         transaction_hash=TX_HASH, ledger=1, timestamp_unix=1,
         successful=True, sender=SENDER, recipient=RECIPIENT,
         asset_code="XLM", asset_issuer=None, amount_stroops=1,
-        memo=None, operation_type="payment",
+        memo=None, memo_type="none", operation_type="payment",
+        operations=[PaymentOperation("payment", SENDER, RECIPIENT, "XLM", None, 1)],
     )
     checks_a = [
         CheckResult("a", "PASS", None, None, "x"),
@@ -124,7 +138,8 @@ def test_chain_of_custody_does_not_affect_seal():
         transaction_hash=TX_HASH, ledger=1, timestamp_unix=1,
         successful=True, sender=SENDER, recipient=RECIPIENT,
         asset_code="XLM", asset_issuer=None, amount_stroops=1,
-        memo=None, operation_type="payment",
+        memo=None, memo_type="none", operation_type="payment",
+        operations=[PaymentOperation("payment", SENDER, RECIPIENT, "XLM", None, 1)],
     )
     checks = [CheckResult("test", "PASS", None, None, "ok")]
     bundle_a = EvidenceBundle.build(

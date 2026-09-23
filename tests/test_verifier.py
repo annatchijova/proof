@@ -5,7 +5,7 @@ Each test states the invariant it defends and what mutation it would catch.
 """
 from proof.canonicalize import CANONICALIZE_VERSION
 from proof.claim import PaymentClaim
-from proof.evidence import CheckResult, EvidenceBundle, PaymentEvidence
+from proof.evidence import CheckResult, EvidenceBundle, PaymentEvidence, PaymentOperation
 from proof.verifier import verify_bundle
 
 TX_HASH = "a" * 64
@@ -16,6 +16,14 @@ RECIPIENT = "GCXSC2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
 def _make_bundle(verdict="VERIFIED", checks=None, evidence=None) -> dict:
     """Build a valid bundle dict for testing."""
     if evidence is None:
+        op = PaymentOperation(
+            operation_type="payment",
+            sender=SENDER,
+            recipient=RECIPIENT,
+            asset_code="XLM",
+            asset_issuer=None,
+            amount_stroops=1000000000,
+        )
         evidence = PaymentEvidence(
             transaction_hash=TX_HASH,
             ledger=12345,
@@ -27,7 +35,9 @@ def _make_bundle(verdict="VERIFIED", checks=None, evidence=None) -> dict:
             asset_issuer=None,
             amount_stroops=1000000000,
             memo=None,
+            memo_type="none",
             operation_type="payment",
+            operations=[op],
         ).to_dict()
 
     if checks is None:

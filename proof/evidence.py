@@ -38,8 +38,50 @@ SCOPE_NOTES = [
 
 
 @dataclass(frozen=True)
+class PaymentOperation:
+    """One payment-type operation within a transaction.
+
+    For path payments, source_asset_* fields describe what the sender spent
+    and asset_* fields describe what the recipient received.
+    """
+
+    operation_type: str
+    sender: str
+    recipient: str
+    asset_code: str
+    asset_issuer: str | None
+    amount_stroops: int
+    source_asset_code: str | None = None
+    source_asset_issuer: str | None = None
+    source_amount_stroops: int | None = None
+
+    def to_dict(self) -> dict:
+        result: dict = {
+            "operation_type": self.operation_type,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "asset_code": self.asset_code,
+            "asset_issuer": self.asset_issuer,
+            "amount_stroops": self.amount_stroops,
+        }
+        if self.source_asset_code is not None:
+            result["source_asset_code"] = self.source_asset_code
+        if self.source_asset_issuer is not None:
+            result["source_asset_issuer"] = self.source_asset_issuer
+        if self.source_amount_stroops is not None:
+            result["source_amount_stroops"] = self.source_amount_stroops
+        return result
+
+
+@dataclass(frozen=True)
 class PaymentEvidence:
-    """What the Stellar ledger shows for a given transaction."""
+    """What the Stellar ledger shows for a given transaction.
+
+    A transaction may contain multiple payment-type operations. Each is
+    represented as a PaymentOperation in the operations list. The top-level
+    fields (sender, recipient, etc.) are convenience aliases for the first
+    payment operation, preserving backward compatibility with L1/L2 callers.
+    """
 
     transaction_hash: str
     ledger: int
@@ -51,7 +93,9 @@ class PaymentEvidence:
     asset_issuer: str | None
     amount_stroops: int
     memo: str | None
+    memo_type: str
     operation_type: str
+    operations: list[PaymentOperation] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return a dict for canonical serialization."""
@@ -66,7 +110,9 @@ class PaymentEvidence:
             "asset_issuer": self.asset_issuer,
             "amount_stroops": self.amount_stroops,
             "memo": self.memo,
+            "memo_type": self.memo_type,
             "operation_type": self.operation_type,
+            "operations": [op.to_dict() for op in self.operations],
         }
         return result
 

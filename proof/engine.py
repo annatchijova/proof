@@ -74,8 +74,11 @@ def verify_payment(
                 fetched_at=fetched_at,
             )
 
+        # Fetch effects for account_merge amount lookup.
+        effects = client.fetch_effects(claim.transaction_hash)
+
         try:
-            evidence = extract_evidence(tx_data, operations)
+            evidence = extract_evidence(tx_data, operations, effects)
         except ExtractionError as exc:
             return _insufficient_evidence_bundle(
                 claim,

@@ -13,15 +13,17 @@ from .evidence import (
     NOT_VERIFIED,
     PASS,
     PaymentEvidence,
+    PaymentOperation,
     VERIFIED,
 )
 from .engine import verify_payment
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "PaymentClaim",
     "PaymentEvidence",
+    "PaymentOperation",
     "CheckResult",
     "EvidenceBundle",
     "verify_payment",

@@ -64,7 +64,13 @@ def _check(
 def _check_asset(
     claim: PaymentClaim, evidence: PaymentEvidence
 ) -> CheckResult:
-    """Check asset code and issuer together."""
+    """Check asset code and issuer together.
+
+    For path payments, the evidence may have source_asset fields on the
+    first operation. If the claim specifies an asset that matches the source
+    asset but not the destination, we still FAIL — the claim should match
+    the destination asset (what the recipient received).
+    """
     if claim.asset_code is None:
         return CheckResult(
             name="asset_matches",
@@ -110,6 +116,47 @@ def _check_asset(
         expected=claim_asset,
         actual=evidence_asset,
         detail="Asset code does not match.",
+    )
+
+
+def _check_source_asset(
+    claim: PaymentClaim, evidence: PaymentEvidence
+) -> CheckResult:
+    """Check source asset for path payments.
+
+    Only applicable when the evidence has a source asset (path payments).
+    If the claim doesn't specify a source asset, ABSTAIN. If the evidence
+    doesn't have a source asset, ABSTAIN (not a path payment).
+    """
+    if not evidence.operations:
+        return CheckResult(
+            name="source_asset_matches",
+            status=ABSTAIN,
+            expected=None,
+            actual=None,
+            detail="No operations in evidence — not checked.",
+        )
+
+    first_op = evidence.operations[0]
+    if first_op.source_asset_code is None:
+        return CheckResult(
+            name="source_asset_matches",
+            status=ABSTAIN,
+            expected=None,
+            actual=None,
+            detail="Not a path payment — no source asset in evidence.",
+        )
+
+    # The claim doesn't have a source_asset field yet (L3 doesn't add it
+    # to PaymentClaim). This check is structural — it reports the source
+    # asset for informational purposes. ABSTAIN until the claim can express
+    # source asset expectations.
+    return CheckResult(
+        name="source_asset_matches",
+        status=ABSTAIN,
+        expected=None,
+        actual=f"{first_op.source_asset_code}:{first_op.source_asset_issuer or 'native'}",
+        detail="Source asset present in path payment — claim has no source asset assertion.",
     )
 
 
@@ -210,6 +257,9 @@ def adjudicate(
     # 5. Asset matches.
     checks.append(_check_asset(claim, evidence))
 
+    # 5b. Source asset (path payments) — informational, ABSTAIN for now.
+    checks.append(_check_source_asset(claim, evidence))
+
     # 6. Amount matches.
     checks.append(
         _check(
@@ -225,15 +275,29 @@ def adjudicate(
     checks.append(_check_ledger_window(claim, evidence))
 
     # 8. Reference/memo matches.
-    checks.append(
-        _check(
-            "reference_matches",
-            claim.reference,
-            evidence.memo,
-            "Reference/memo matches the claimed value.",
-            "Reference/memo does not match the claimed value.",
+    # Only compare against the memo when the memo type is "text". Hash and
+    # return memos are binary and don't have a string representation that
+    # a claim's reference field would match meaningfully.
+    if evidence.memo_type == "text":
+        checks.append(
+            _check(
+                "reference_matches",
+                claim.reference,
+                evidence.memo,
+                "Reference/memo matches the claimed value.",
+                "Reference/memo does not match the claimed value.",
+            )
         )
-    )
+    else:
+        checks.append(
+            CheckResult(
+                name="reference_matches",
+                status=ABSTAIN,
+                expected=claim.reference,
+                actual=f"memo_type={evidence.memo_type}",
+                detail=f"Memo type is {evidence.memo_type!r}, not 'text' — reference not checked.",
+            )
+        )
 
     return checks
 

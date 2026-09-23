@@ -11,6 +11,7 @@ from proof.evidence import (
     NOT_VERIFIED,
     PASS,
     PaymentEvidence,
+    PaymentOperation,
     VERIFIED,
 )
 
@@ -20,7 +21,21 @@ RECIPIENT = "GCXSC2OO2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z2QZ2NLM7XQ2Z"
 TX_HASH = "a" * 64
 
 
+def _make_op(**overrides) -> PaymentOperation:
+    defaults = dict(
+        operation_type="payment",
+        sender=SENDER,
+        recipient=RECIPIENT,
+        asset_code="XLM",
+        asset_issuer=None,
+        amount_stroops=1000000000,
+    )
+    defaults.update(overrides)
+    return PaymentOperation(**defaults)
+
+
 def _make_evidence(**overrides) -> PaymentEvidence:
+    op = _make_op()
     defaults = dict(
         transaction_hash=TX_HASH,
         ledger=12345,
@@ -32,7 +47,9 @@ def _make_evidence(**overrides) -> PaymentEvidence:
         asset_issuer=None,
         amount_stroops=1000000000,  # 100 XLM
         memo="INV-184",
+        memo_type="text",
         operation_type="payment",
+        operations=[op],
     )
     defaults.update(overrides)
     return PaymentEvidence(**defaults)

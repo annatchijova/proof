@@ -78,9 +78,9 @@ python -m pytest tests/ -v
 proof/
   canonicalize.py    # typed, ordered, versioned serialization + SHA-256 seal
   claim.py           # PaymentClaim — what someone asserts happened
-  evidence.py        # PaymentEvidence, CheckResult, EvidenceBundle
-  stellar_client.py  # Horizon API wrapper (testnet + mainnet)
-  extractor.py       # reconstruct evidence from tx + operations
+  evidence.py        # PaymentEvidence, PaymentOperation, CheckResult, EvidenceBundle
+  stellar_client.py  # Horizon API wrapper (testnet + mainnet, fetches tx/ops/effects)
+  extractor.py       # reconstruct evidence from tx + operations + effects (L3: multi-op, path payments)
   adjudicator.py     # compare claim vs evidence, produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
   engine.py          # main entry point: verify_payment(claim, network)
