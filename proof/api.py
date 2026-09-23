@@ -279,7 +279,10 @@ _INDEX_HTML = """<!DOCTYPE html>
       <option value="mainnet">Mainnet</option>
     </select>
 
-    <button id="verify_btn" onclick="verify()" data-i18n="verify_btn"></button>
+    <div style="display:flex; gap:0.5rem;">
+      <button id="verify_btn" onclick="verify()" data-i18n="verify_btn"></button>
+      <button id="example_btn" onclick="loadExample()" data-i18n="example_btn" style="white-space:nowrap; width:auto;"></button>
+    </div>
   </div>
 
   <div id="error" class="card error hidden"></div>
@@ -354,6 +357,7 @@ const I18N = {
     network_label: 'Network',
     verify_btn: 'Verify Payment',
     verifying: 'Verifying...',
+    example_btn: 'Try an example',
     seal_label: 'Sealed evidence bundle (SHA-256)',
     th_check: 'Check', th_status: 'Status', th_detail: 'Detail',
     tx_required: 'Transaction hash is required.',
@@ -397,6 +401,7 @@ const I18N = {
     network_label: 'Red',
     verify_btn: 'Verificar Pago',
     verifying: 'Verificando...',
+    example_btn: 'Probar un ejemplo',
     seal_label: 'Bundle de evidencia sellado (SHA-256)',
     th_check: 'Check', th_status: 'Estado', th_detail: 'Detalle',
     tx_required: 'El hash de transacción es obligatorio.',
@@ -451,6 +456,17 @@ function toggleTheme() {
   theme = theme === 'dark' ? 'light' : 'dark';
   localStorage.setItem('proof-theme', theme);
   applyTheme();
+}
+
+function loadExample() {
+  document.getElementById('tx_hash').value = '0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669';
+  document.getElementById('sender').value = 'GBCGM4OPIEOSI3IADI6J67CKHKZF72WZEGBHS4BNK5MQMLCTYFDJL66O';
+  document.getElementById('recipient').value = 'GDLWNTN6N2NTX5DFFIGL7PLXY6TGMYG7DPURQOXSOU3MBX5WRLLJZEWV';
+  document.getElementById('asset_code').value = 'XLM';
+  document.getElementById('amount_xlm').value = '100';
+  document.getElementById('reference').value = 'INV-TEST-129650';
+  document.getElementById('network').value = 'testnet';
+  document.getElementById('verifier').scrollIntoView({behavior:'smooth'});
 }
 
 async function verify() {
