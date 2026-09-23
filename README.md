@@ -255,7 +255,9 @@ verification against real Testnet transactions.
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md). For a field-by-field bundle example, see
 the [annotated EvidenceBundle](docs/evidence-bundle-example.md). To see the
-tamper-evident property run `python scripts/tamper_demo.py`.
+tamper-evident property run `python scripts/tamper_demo.py`. The [rendered
+architecture diagram](docs/proof-architecture.html) is available for a visual
+overview.
 
 ## Screenshots
 

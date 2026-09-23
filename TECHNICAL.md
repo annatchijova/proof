@@ -50,6 +50,10 @@ The technical flow is intentionally fail-closed: any fetch or extraction
 error terminates in `INSUFFICIENT_EVIDENCE`; only a complete set of passing
 applicable checks can produce `VERIFIED`.
 
+For an explorable rendered version of this architecture, see
+[`docs/proof-architecture.html`](docs/proof-architecture.html). Its source
+specification and visual-check receipt are kept beside the artifact.
+
 ## Data model
 
 ### PaymentClaim

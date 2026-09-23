@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PROOF verification architecture",
+    "output": "proof-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/annatchijova/proof",
+      "revision": "00d3e20bf0eb6f1b9fbae32c2fd50f31b88abb9c"
+    },
+    "viewBox": [1390, 700],
+    "views": [
+      {
+        "id": "verification-path",
+        "label": "Verification path",
+        "focus": ["claimant", "api", "horizon", "extractor", "adjudicator", "bundle", "verifier"],
+        "note": "Follow a payment claim from the public interface to an independently checked sealed bundle."
+      },
+      {
+        "id": "commitment-path",
+        "label": "Commitments and receipts",
+        "focus": ["api", "commitment", "soroban", "bundle"],
+        "note": "See how optional commitment and receipt records extend the off-chain evidence flow."
+      },
+      {
+        "id": "trust-boundaries",
+        "label": "Trust boundaries",
+        "focus": ["api", "horizon", "adjudicator", "bundle", "verifier", "soroban"],
+        "note": "Separate external ledger input, deterministic adjudication, sealing, and on-chain registry state."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "claimant",
+      "type": "external",
+      "label": "Claimant",
+      "sublabel": "Browser client",
+      "pos": [40, 330],
+      "size": [150, 70],
+      "sources": [{"path": "README.md", "line": 18, "label": "product flow"}]
+    },
+    {
+      "id": "api",
+      "type": "frontend",
+      "label": "FastAPI + UI",
+      "sublabel": "HTTP boundary",
+      "tag": "validate inputs",
+      "pos": [250, 330],
+      "size": [170, 70],
+      "sources": [{"path": "proof/api.py", "line": 28, "label": "API app"}]
+    },
+    {
+      "id": "horizon",
+      "type": "external",
+      "label": "Stellar Horizon",
+      "sublabel": "Testnet / Mainnet",
+      "pos": [250, 120],
+      "size": [170, 70],
+      "sources": [{"path": "proof/stellar_client.py", "line": 1, "label": "ledger source"}]
+    },
+    {
+      "id": "extractor",
+      "type": "backend",
+      "label": "Evidence extractor",
+      "sublabel": "validated ledger facts",
+      "pos": [480, 330],
+      "size": [180, 70],
+      "sources": [{"path": "proof/extractor.py", "line": 1, "label": "reconstruction"}]
+    },
+    {
+      "id": "adjudicator",
+      "type": "security",
+      "label": "Adjudicator",
+      "sublabel": "PASS / FAIL / ABSTAIN",
+      "tag": "fail closed",
+      "pos": [720, 330],
+      "size": [180, 70],
+      "sources": [{"path": "proof/adjudicator.py", "line": 1, "label": "decision path"}]
+    },
+    {
+      "id": "bundle",
+      "type": "security",
+      "label": "EvidenceBundle",
+      "sublabel": "canonical payload + seal",
+      "tag": "SHA-256",
+      "pos": [960, 330],
+      "size": [180, 70],
+      "sources": [{"path": "proof/evidence.py", "line": 127, "label": "sealed output"}]
+    },
+    {
+      "id": "verifier",
+      "type": "backend",
+      "label": "Independent verifier",
+      "sublabel": "re-seal + consistency",
+      "pos": [1174, 330],
+      "size": [180, 70],
+      "sources": [{"path": "proof/verifier.py", "line": 1, "label": "verification"}]
+    },
+    {
+      "id": "commitment",
+      "type": "backend",
+      "label": "Commitment / dispute logic",
+      "sublabel": "optional context",
+      "pos": [720, 120],
+      "size": [190, 70],
+      "sources": [{"path": "proof/commitment.py", "line": 1, "label": "commitments"}, {"path": "proof/dispute.py", "line": 1, "label": "disputes"}]
+    },
+    {
+      "id": "soroban",
+      "type": "cloud",
+      "label": "Soroban registry",
+      "sublabel": "commitments + receipts",
+      "pos": [960, 120],
+      "size": [190, 70],
+      "sources": [{"path": "proof/soroban_client.py", "line": 1, "label": "RPC client"}, {"path": "soroban/proof-registry/src/lib.rs", "line": 1, "label": "contract"}]
+    }
+  ],
+  "boundaries": [
+    {"kind": "security-group", "label": "External ledger boundary", "wraps": ["horizon"]},
+    {"kind": "security-group", "label": "Deterministic decision boundary", "wraps": ["extractor", "adjudicator", "bundle", "verifier"]},
+    {"kind": "region", "label": "Optional on-chain registry", "wraps": ["soroban"]}
+  ],
+  "connections": [
+    {"id": "claim-to-api", "from": "claimant", "to": "api", "label": "claim + tx hash", "variant": "emphasis", "labelDy": -29},
+    {"id": "api-to-horizon", "from": "api", "to": "horizon", "label": "fetch tx / ops", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "labelDx": -65},
+    {"id": "api-to-extractor", "from": "api", "to": "extractor", "label": "validated request", "labelDy": -55},
+    {"id": "horizon-to-extractor", "from": "horizon", "to": "extractor", "label": "ledger response", "variant": "dashed", "fromSide": "right", "toSide": "top", "via": [[460, 155], [460, 260], [570, 260]]},
+    {"id": "extractor-to-adjudicator", "from": "extractor", "to": "adjudicator", "label": "PaymentEvidence", "labelDy": -29},
+    {"id": "api-to-adjudicator", "from": "api", "to": "adjudicator", "label": "PaymentClaim", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom", "labelDy": 60},
+    {"id": "commitment-to-adjudicator", "from": "commitment", "to": "adjudicator", "label": "optional checks", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDx": 105},
+    {"id": "adjudicator-to-bundle", "from": "adjudicator", "to": "bundle", "label": "verdict + checks", "variant": "emphasis", "labelDy": -29},
+    {"id": "bundle-to-verifier", "from": "bundle", "to": "verifier", "label": "bundle JSON", "labelDy": -29},
+    {"id": "commitment-to-soroban", "from": "commitment", "to": "soroban", "label": "register / query", "variant": "dashed", "labelDy": -60},
+    {"id": "bundle-to-soroban", "from": "bundle", "to": "soroban", "label": "receipt seal", "variant": "dashed", "fromSide": "top", "toSide": "bottom"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Evidence", "items": ["Horizon is the source of ledger facts", "Extraction validates and reconstructs operations"]},
+    {"dot": "emerald", "title": "Decision", "items": ["Claims are checked proposition by proposition", "Unspecified fields remain ABSTAIN"]},
+    {"dot": "rose", "title": "Integrity", "items": ["Only the canonical payload is sealed", "The independent verifier detects mutation"]}
+  ]
+}
