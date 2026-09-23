@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/annatchijova/proof/security/policy
+    about: Do not disclose security issues in a public issue. Follow SECURITY.md.
+  - name: Read the contributor and protocol rules
+    url: https://github.com/annatchijova/proof/blob/main/CONTRIBUTING.md
+    about: Check the protocol freeze and contribution requirements before proposing a change.
