@@ -143,7 +143,7 @@ proof/
   engine.py          # entry point: verify_payment(claim, network)
   api.py             # FastAPI HTTP API + UI en GET /
   mcp_server.py      # MCP server para integración con LLMs
-  soroban/           # contrato Soroban opcional (Rust)
+  soroban/proof-registry/  # contrato registry Soroban (Rust, opcional de compilar localmente)
 scripts/
   testnet_e2e.py     # test end-to-end real contra Stellar Testnet
 tests/               # 161 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversariales

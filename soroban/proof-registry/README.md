@@ -66,10 +66,16 @@ cargo test
 
 ## Integration with the Python core
 
-The Python core (L4) currently uses `manage_data` operations for on-chain
-commitments. This Soroban contract provides a more structured alternative:
-persistent storage, typed records, authorization, and queryable state.
+The Python core supports two on-chain storage paths:
 
-Future integration: the Python core will be extended to optionally use this
-contract instead of `manage_data` for commitment and receipt storage. The
-contract extends the evidence model — it does not duplicate off-chain logic.
+- **Soroban (primary):** `proof/soroban_client.py` uses the deployed
+  `proof-registry` contract for the API and MCP commitment/receipt endpoints.
+  This path provides persistent typed records, authorization, immutability,
+  and queryable state.
+- **`manage_data` (fallback):** the off-chain commitment module retains the
+  native Stellar path for backward compatibility and environments where
+  Soroban is unavailable. It is not the path exposed by the public API.
+
+The contract extends the evidence model — it does not duplicate off-chain
+payment extraction, adjudication, or sealing logic. Hashes and verdicts are
+computed by the deterministic Python core before registration.
