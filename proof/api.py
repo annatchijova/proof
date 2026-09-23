@@ -375,3 +375,186 @@ def receipt(req: ReceiptRequest) -> dict[str, Any]:
 
     receipt_obj = issue_receipt(bundle)
     return receipt_obj.to_dict()
+
+
+class CommitRequest(BaseModel):
+    """Request body for POST /commit.
+
+    Registers a commitment on the Soroban contract. The commitment hash
+    is computed from the payment terms (sender, recipient, asset, amount,
+    reference) using the same canonicalization as the off-chain core.
+    """
+    committer: str = Field(..., description="Stellar address of the committer (G...)")
+    reference: str = Field(..., description="Reference string (e.g. invoice number)")
+    sender: str = Field(..., description="Expected sender address (G...)")
+    recipient: str = Field(..., description="Expected recipient address (G...)")
+    asset_code: str = Field("XLM", description="Asset code (e.g. XLM, USDC)")
+    asset_issuer: str | None = Field(None, description="Asset issuer address (None for XLM)")
+    amount_stroops: int = Field(..., description="Amount in stroops (integer)")
+    network: str = Field("testnet", description="Stellar network: testnet or mainnet")
+
+    @field_validator("network")
+    @classmethod
+    def validate_network(cls, v: str) -> str:
+        if v not in ("testnet", "mainnet"):
+            raise ValueError("network must be 'testnet' or 'mainnet'")
+        return v
+
+
+@app.post("/commit")
+def commit(req: CommitRequest) -> dict[str, Any]:
+    """Register a commitment on the Soroban contract.
+
+    Computes the commitment hash from the payment terms and registers it
+    on-chain. The commitment is immutable — it cannot be overwritten.
+
+    This endpoint does NOT verify a payment. It only commits the expected
+    payment terms on-chain so that a future verification can prove the
+    terms were committed before the payment occurred.
+    """
+    from .commitment import CommitmentTerms
+    from .soroban_client import register_commitment, SorobanClientError
+
+    try:
+        terms = CommitmentTerms(
+            sender=req.sender,
+            recipient=req.recipient,
+            asset_code=req.asset_code,
+            asset_issuer=req.asset_issuer,
+            amount_stroops=req.amount_stroops,
+            reference=req.reference,
+        )
+        commitment_hash = terms.commitment_hash()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    try:
+        on_chain = register_commitment(
+            committer=req.committer,
+            reference=req.reference,
+            commitment_hash=commitment_hash,
+        )
+    except SorobanClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {
+        "status": "committed",
+        "commitment_hash": commitment_hash,
+        "on_chain": {
+            "reference": on_chain.reference,
+            "commitment_hash": on_chain.commitment_hash,
+            "committer": on_chain.committer,
+            "ledger": on_chain.ledger,
+            "timestamp": on_chain.timestamp,
+        },
+    }
+
+
+class OnChainQueryRequest(BaseModel):
+    """Request body for on-chain queries."""
+    reference: str | None = Field(None, description="Commitment reference")
+    transaction_hash: str | None = Field(None, description="Transaction hash")
+
+
+@app.get("/onchain/commitment")
+def get_onchain_commitment(reference: str) -> dict[str, Any]:
+    """Retrieve a commitment from the Soroban contract."""
+    from .soroban_client import get_commitment, SorobanClientError
+
+    try:
+        result = get_commitment(reference)
+    except SorobanClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="commitment not found")
+
+    return {
+        "reference": result.reference,
+        "commitment_hash": result.commitment_hash,
+        "committer": result.committer,
+        "ledger": result.ledger,
+        "timestamp": result.timestamp,
+    }
+
+
+@app.get("/onchain/receipt")
+def get_onchain_receipt(transaction_hash: str) -> dict[str, Any]:
+    """Retrieve a receipt from the Soroban contract."""
+    from .soroban_client import get_receipt, SorobanClientError
+
+    try:
+        result = get_receipt(transaction_hash)
+    except SorobanClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="receipt not found")
+
+    return {
+        "transaction_hash": result.transaction_hash,
+        "seal": result.seal,
+        "verdict": result.verdict,
+        "ledger": result.ledger,
+        "timestamp": result.timestamp,
+    }
+
+
+@app.post("/onchain/register-receipt")
+def register_onchain_receipt(req: ReceiptRequest) -> dict[str, Any]:
+    """Register a receipt on the Soroban contract after verification.
+
+    This registers the evidence bundle seal on-chain so that third
+    parties can independently verify the receipt exists.
+    """
+    from .evidence import EvidenceBundle
+    from .soroban_client import register_receipt, SorobanClientError
+    import os
+
+    bundle_dict = req.bundle
+    if not isinstance(bundle_dict, dict):
+        raise HTTPException(status_code=400, detail="bundle must be a dict")
+
+    required_fields = {"version", "claim", "evidence", "checks", "verdict", "seal"}
+    missing = required_fields - set(bundle_dict.keys())
+    if missing:
+        raise HTTPException(status_code=400, detail=f"bundle missing fields: {missing}")
+
+    bundle = EvidenceBundle(
+        version=bundle_dict["version"],
+        claim=bundle_dict["claim"],
+        evidence=bundle_dict["evidence"],
+        checks=bundle_dict["checks"],
+        verdict=bundle_dict["verdict"],
+        scope_notes=bundle_dict.get("scope_notes", []),
+        seal=bundle_dict["seal"],
+        chain_of_custody=bundle_dict.get("chain_of_custody", {}),
+        commitment=bundle_dict.get("commitment"),
+    )
+
+    tx_hash = bundle_dict.get("claim", {}).get("transaction_hash", "")
+    if not tx_hash:
+        raise HTTPException(status_code=400, detail="bundle missing transaction_hash in claim")
+
+    registrar = os.environ.get("PROOF_STELLAR_SOURCE", "alice")
+
+    try:
+        on_chain = register_receipt(
+            registrar=registrar,
+            transaction_hash=tx_hash,
+            seal=bundle.seal,
+            verdict=bundle.verdict,
+        )
+    except SorobanClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {
+        "status": "registered",
+        "on_chain": {
+            "transaction_hash": on_chain.transaction_hash,
+            "seal": on_chain.seal,
+            "verdict": on_chain.verdict,
+            "ledger": on_chain.ledger,
+            "timestamp": on_chain.timestamp,
+        },
+    }
