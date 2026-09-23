@@ -160,17 +160,56 @@ _INDEX_HTML = """<!DOCTYPE html>
   .row { display: flex; gap: 1rem; }
   .row > div { flex: 1; }
   .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .info-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; transition: background 0.2s, border 0.2s;
+  }
+  .info-card h3 { font-size: 0.85rem; color: var(--blue); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .info-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+  .repo-link {
+    display: inline-flex; align-items: center; gap: 0.3rem; color: var(--blue);
+    text-decoration: none; font-size: 0.85rem; font-weight: 600;
+  }
+  .repo-link:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block; background: rgba(88,166,255,0.15); color: var(--blue);
+    border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+    margin-left: 0.5rem; vertical-align: middle;
+  }
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
   <div class="header">
     <div class="header-left">
-      <h1>PROOF</h1>
+      <h1>PROOF <span class="badge" data-i18n="badge"></span></h1>
       <p class="tagline" data-i18n="tagline"></p>
     </div>
     <div class="controls">
       <button class="toggle" id="lang_btn" onclick="toggleLang()">ES</button>
       <button class="toggle" id="theme_btn" onclick="toggleTheme()">&#9681;</button>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <h3 data-i18n="info_what_h"></h3>
+      <p data-i18n="info_what_p"></p>
+    </div>
+    <div class="info-card">
+      <h3 data-i18n="info_why_h"></h3>
+      <p data-i18n="info_why_p"></p>
+    </div>
+    <div class="info-card">
+      <h3 data-i18n="info_stellar_h"></h3>
+      <p data-i18n="info_stellar_p"></p>
+    </div>
+    <div class="info-card">
+      <h3 data-i18n="info_diff_h"></h3>
+      <p data-i18n="info_diff_p"></p>
     </div>
   </div>
 
@@ -231,12 +270,28 @@ _INDEX_HTML = """<!DOCTYPE html>
     </div>
   </div>
 
-  <div class="footer" data-i18n="footer"></div>
+  <div class="footer">
+    <span data-i18n="footer"></span>
+    <br><br>
+    <a class="repo-link" href="https://github.com/annatchijova/proof" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      github.com/annatchijova/proof
+    </a>
+  </div>
 
 <script>
 const I18N = {
   en: {
+    badge: 'Stellar Testnet',
     tagline: 'Someone sends you a screenshot saying they paid. PROOF verifies what actually happened — from the Stellar ledger, not from images.',
+    info_what_h: 'What it does',
+    info_what_p: 'Turns a payment claim into a deterministic verification against the Stellar ledger. Returns a sealed evidence bundle with a verdict: VERIFIED, NOT_VERIFIED, or INSUFFICIENT_EVIDENCE.',
+    info_why_h: 'Why',
+    info_why_p: 'A screenshot is an image, not evidence. It can be edited, fabricated, or taken from a different transaction. The ledger contains independently inspectable facts about what actually occurred.',
+    info_stellar_h: 'Why Stellar',
+    info_stellar_p: 'Stellar is a public ledger. Every transaction is independently verifiable by anyone, without trusting a private database or a third party. PROOF reads the ledger, not a screenshot.',
+    info_diff_h: 'How it differs',
+    info_diff_p: 'No AI. No probabilities. No "our advanced model detected...". Pure deterministic verification: the same input always produces the same sealed result, independently reproducible.',
     tx_hash_label: 'Transaction hash (64-char hex)',
     tx_hash_ph: 'e.g. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Expected sender (G...) — optional',
@@ -260,14 +315,23 @@ const I18N = {
     footer: 'PROOF — deterministic Stellar payment verification. No AI, no probabilities, no screenshots.'
   },
   es: {
+    badge: 'Stellar Testnet',
     tagline: 'Alguien te manda una captura diciendo que te pagó. PROOF verifica qué pasó realmente — desde el ledger de Stellar, no desde imágenes.',
+    info_what_h: 'Qué hace',
+    info_what_p: 'Convierte un claim de pago en una verificación determinista contra el ledger de Stellar. Devuelve un bundle de evidencia sellado con un veredicto: VERIFIED, NOT_VERIFIED, o INSUFFICIENT_EVIDENCE.',
+    info_why_h: 'Por qué',
+    info_why_p: 'Una captura es una imagen, no evidencia. Puede ser editada, fabricada, o sacada de otra transacción. El ledger contiene hechos verificables independientemente sobre qué pasó realmente.',
+    info_stellar_h: 'Por qué Stellar',
+    info_stellar_p: 'Stellar es un ledger público. Cada transacción es verificable por cualquiera, sin confiar en una base de datos privada ni en un tercero. PROOF lee el ledger, no una captura.',
+    info_diff_h: 'En qué se diferencia',
+    info_diff_p: 'Sin IA. Sin probabilidades. Sin "nuestro modelo avanzado detectó...". Verificación puramente determinista: la misma entrada siempre produce el mismo resultado sellado, reproducible independientemente.',
     tx_hash_label: 'Hash de transacción (64 chars hex)',
     tx_hash_ph: 'ej. 0ef76485729ca2704ea73ff3fc65f7d156c286bacc52bd8d36d19deace4de669',
     sender_label: 'Sender esperado (G...) — opcional',
     sender_ph: 'G...',
     recipient_label: 'Recipient esperado (G...) — opcional',
     recipient_ph: 'G...',
-    asset_label: 'Codigo de asset — opcional',
+    asset_label: 'Código de asset — opcional',
     asset_ph: 'XLM, USDC, ...',
     amount_label: 'Monto (XLM) — opcional',
     reference_label: 'Referencia/memo esperado — opcional',
@@ -277,11 +341,11 @@ const I18N = {
     verifying: 'Verificando...',
     seal_label: 'Bundle de evidencia sellado (SHA-256)',
     th_check: 'Check', th_status: 'Estado', th_detail: 'Detalle',
-    tx_required: 'El hash de transaccion es obligatorio.',
+    tx_required: 'El hash de transacción es obligatorio.',
     error_prefix: 'Error: ',
     net_error: 'Error de red: ',
     note_prefix: 'Nota: ',
-    footer: 'PROOF — verificacion determinista de pagos Stellar. Sin IA, sin probabilidades, sin capturas.'
+    footer: 'PROOF — verificación determinista de pagos Stellar. Sin IA, sin probabilidades, sin capturas.'
   }
 };
 
