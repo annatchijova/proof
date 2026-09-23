@@ -358,46 +358,76 @@ def _check_commitment_terms_against_evidence(
     # The committed hash is the hash of the expected payment terms.
     # We don't have the terms on-chain (only the hash), so we check
     # the hash against a recomputed hash from the actual payment.
-    # But we can't recompute without knowing what fields were committed.
-    # The commitment hash is opaque — it's a hash, not the terms.
-    # So we check: does the committed hash match a hash we can compute
-    # from the payment evidence?
     #
-    # This requires knowing the canonical form of the commitment terms.
-    # The committer used CommitmentTerms.to_dict() -> seal().
-    # We reconstruct the terms from the evidence and check.
+    # The commitment could be for ANY operation in a multi-operation
+    # transaction, not just the first. We try each operation and PASS
+    # if any of them produces a matching hash. This fixes a false
+    # negative where a commitment for the second or third operation
+    # would always FAIL because we only checked the first.
     from .commitment import CommitmentTerms
 
-    try:
-        reconstructed_terms = CommitmentTerms(
-            sender=evidence.sender,
-            recipient=evidence.recipient,
-            asset_code=evidence.asset_code,
-            asset_issuer=evidence.asset_issuer,
-            amount_stroops=evidence.amount_stroops,
-            reference=evidence.memo if evidence.memo_type == "text" else None,
+    reference = evidence.memo if evidence.memo_type == "text" else None
+
+    # Build candidate term sets from the top-level fields AND each operation.
+    candidates: list[tuple[str, str, str, str | None, int, str | None]] = [
+        (
+            evidence.sender,
+            evidence.recipient,
+            evidence.asset_code,
+            evidence.asset_issuer,
+            evidence.amount_stroops,
+            reference,
         )
-        reconstructed_hash = reconstructed_terms.commitment_hash()
-    except Exception as exc:
+    ]
+    for op in evidence.operations:
+        candidates.append((
+            op.sender,
+            op.recipient,
+            op.asset_code,
+            op.asset_issuer,
+            op.amount_stroops,
+            reference,  # memo is transaction-level, not per-operation
+        ))
+
+    matching_hash: str | None = None
+    reconstruction_errors: list[str] = []
+
+    for sender, recipient, asset_code, asset_issuer, amount_stroops, ref in candidates:
+        try:
+            terms = CommitmentTerms(
+                sender=sender,
+                recipient=recipient,
+                asset_code=asset_code,
+                asset_issuer=asset_issuer,
+                amount_stroops=amount_stroops,
+                reference=ref,
+            )
+            h = terms.commitment_hash()
+            if h == commitment.committed_hash:
+                matching_hash = h
+                break
+        except Exception as exc:
+            reconstruction_errors.append(str(exc))
+            continue
+
+    if matching_hash is not None:
+        checks.append(
+            CheckResult(
+                name="commitment_hash_matches",
+                status=PASS,
+                expected=commitment.committed_hash,
+                actual=matching_hash,
+                detail="Payment evidence matches the on-chain commitment hash.",
+            )
+        )
+    elif reconstruction_errors and not candidates:
         checks.append(
             CheckResult(
                 name="commitment_hash_matches",
                 status=FAIL,
                 expected=commitment.committed_hash,
                 actual=None,
-                detail=f"Cannot reconstruct commitment terms from evidence: {exc}",
-            )
-        )
-        return checks
-
-    if reconstructed_hash == commitment.committed_hash:
-        checks.append(
-            CheckResult(
-                name="commitment_hash_matches",
-                status=PASS,
-                expected=commitment.committed_hash,
-                actual=reconstructed_hash,
-                detail="Payment evidence matches the on-chain commitment hash.",
+                detail=f"Cannot reconstruct commitment terms from evidence: {'; '.join(reconstruction_errors)}",
             )
         )
     else:
@@ -406,8 +436,8 @@ def _check_commitment_terms_against_evidence(
                 name="commitment_hash_matches",
                 status=FAIL,
                 expected=commitment.committed_hash,
-                actual=reconstructed_hash,
-                detail="Payment evidence does not match the on-chain commitment hash.",
+                actual=None,
+                detail="No operation in the transaction produced a matching commitment hash.",
             )
         )
 

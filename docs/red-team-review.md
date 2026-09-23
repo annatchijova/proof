@@ -17,17 +17,18 @@ bundles, three-state verdicts, ABSTAIN for unspecified fields, fail-closed
 behavior — are well-implemented and tested. The red team review found
 **no critical vulnerabilities** that would allow a false VERIFIED verdict.
 
-The review found **7 findings** ranging from low to medium severity:
+The review found **7 findings** ranging from low to medium severity.
+All 6 code findings have been fixed; the 7th (API auth) is documented.
 
-| # | Severity | Finding |
-|---|---|---|
-| 1 | Medium | `amount_to_stroops` truncates fractional stroops silently |
-| 2 | Medium | `fetch_transaction` swallows all exceptions as "not found" |
-| 3 | Medium | No TLS certificate pinning on Horizon connections |
-| 4 | Low | Commitment hash reconstruction assumes evidence fields are complete |
-| 5 | Low | `canonicalize` fallback `str(obj)` can silently absorb unexpected types |
-| 6 | Low | Dispute `find_contradictions` only checks first-level fields |
-| 7 | Low | API has no rate limiting or authentication |
+| # | Severity | Finding | Status |
+|---|---|---|---|
+| 1 | Medium | `amount_to_stroops` truncates fractional stroops silently | Fixed |
+| 2 | Medium | `fetch_transaction` swallows all exceptions as "not found" | Fixed |
+| 3 | Medium | No TLS certificate pinning on Horizon connections | Documented |
+| 4 | Low | Commitment hash reconstruction assumes evidence fields are complete | Fixed |
+| 5 | Low | `canonicalize` fallback `str(obj)` can silently absorb unexpected types | Fixed |
+| 6 | Low | Dispute `find_contradictions` only checks first-level fields | Fixed |
+| 7 | Low | API has no rate limiting or authentication | Documented |
 
 ---
 

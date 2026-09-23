@@ -116,3 +116,65 @@ class TestLedgerValidation:
     def test_min_greater_than_max_rejected(self):
         with pytest.raises(ValueError, match="ledger_min.*ledger_max"):
             PaymentClaim(transaction_hash=TX_HASH, ledger_min=200, ledger_max=100)
+
+
+class TestAmountToStroopsFractionalRejection:
+    """F1: amount_to_stroops must reject fractional stroops, not truncate."""
+
+    def test_exact_seven_decimals_accepted(self):
+        """Invariant: 7 decimal places convert exactly to stroops."""
+        from proof.stellar_client import amount_to_stroops
+        assert amount_to_stroops("100.0000000") == 1000000000
+
+    def test_fractional_stroops_rejected(self):
+        """Invariant: 8+ decimal places raise ValueError, not truncate.
+
+        Mutation caught: if we used int() truncation, "100.00000001"
+        would silently become 1000000000 instead of raising.
+        """
+        from proof.stellar_client import amount_to_stroops
+        with pytest.raises(ValueError, match="fractional stroops"):
+            amount_to_stroops("100.00000001")
+
+    def test_fractional_stroops_negative_rejected(self):
+        """Invariant: negative fractional stroops also raise."""
+        from proof.stellar_client import amount_to_stroops
+        with pytest.raises(ValueError, match="fractional stroops"):
+            amount_to_stroops("-0.00000001")
+
+    def test_integer_amount_accepted(self):
+        """Invariant: integer amounts (no decimals) are accepted."""
+        from proof.stellar_client import amount_to_stroops
+        assert amount_to_stroops("100") == 1000000000
+
+
+class TestCanonicalizeRejectsUnexpectedTypes:
+    """F5: canonicalize must raise TypeError on unexpected types, not str()."""
+
+    def test_bytes_rejected(self):
+        """Invariant: bytes raise TypeError, not str(b'...')."""
+        from proof.canonicalize import canonicalize
+        with pytest.raises(TypeError, match="unsupported type"):
+            canonicalize(b"hello")
+
+    def test_set_rejected(self):
+        """Invariant: set raises TypeError."""
+        from proof.canonicalize import canonicalize
+        with pytest.raises(TypeError, match="unsupported type"):
+            canonicalize({1, 2, 3})
+
+    def test_float_rejected(self):
+        """Invariant: float raises TypeError — no float in sealed path."""
+        from proof.canonicalize import canonicalize
+        with pytest.raises(TypeError, match="unsupported type"):
+            canonicalize(1.5)
+
+    def test_known_types_still_work(self):
+        """Invariant: known types (bool, int, str, None, dict, list) still work."""
+        from proof.canonicalize import canonicalize
+        assert canonicalize(True) == "true"
+        assert canonicalize(42) == "42:int"
+        assert canonicalize("hello") == "hello"
+        assert canonicalize(None) == "null"
+        assert canonicalize({"b": 1, "a": 2}) == {"a": "2:int", "b": "1:int"}
+        assert canonicalize([1, 2]) == ["1:int", "2:int"]

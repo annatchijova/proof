@@ -27,7 +27,13 @@ CANONICALIZE_VERSION: str = "1"
 
 
 def canonicalize(obj: Any) -> Any:
-    """Recursively convert ``obj`` to its strict canonical form for hashing."""
+    """Recursively convert ``obj`` to its strict canonical form for hashing.
+
+    Fails closed on unexpected types — a ``TypeError`` is raised rather
+    than silently converting via ``str(obj)``. This prevents two
+    different objects from colliding if their ``str()`` representations
+    happen to match.
+    """
     if isinstance(obj, bool):  # must precede int — bool subclasses int
         return "true" if obj else "false"
     if isinstance(obj, int):
@@ -40,7 +46,9 @@ def canonicalize(obj: Any) -> Any:
         return {k: canonicalize(v) for k, v in sorted(obj.items())}
     if isinstance(obj, (list, tuple)):
         return [canonicalize(v) for v in obj]
-    return str(obj)
+    raise TypeError(
+        f"canonicalize: unsupported type {type(obj).__name__}: {obj!r}"
+    )
 
 
 def canonical_bytes(payload: Any) -> bytes:

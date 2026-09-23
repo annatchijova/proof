@@ -43,7 +43,7 @@ from .evidence import (
     PaymentEvidence,
 )
 from .extractor import ExtractionError, extract_evidence
-from .stellar_client import StellarClient
+from .stellar_client import StellarClient, StellarFetchError
 
 VERSION = "0.4.0"
 
@@ -68,7 +68,15 @@ def verify_payment(
 
     client = StellarClient(network=network)
     try:
-        tx_data = client.fetch_transaction(claim.transaction_hash)
+        try:
+            tx_data = client.fetch_transaction(claim.transaction_hash)
+        except StellarFetchError as exc:
+            return _insufficient_evidence_bundle(
+                claim,
+                reason=f"Network error fetching transaction: {exc}",
+                network=network,
+                fetched_at=fetched_at,
+            )
         if tx_data is None:
             return _insufficient_evidence_bundle(
                 claim,
@@ -77,7 +85,15 @@ def verify_payment(
                 fetched_at=fetched_at,
             )
 
-        operations = client.fetch_operations(claim.transaction_hash)
+        try:
+            operations = client.fetch_operations(claim.transaction_hash)
+        except StellarFetchError as exc:
+            return _insufficient_evidence_bundle(
+                claim,
+                reason=f"Network error fetching operations: {exc}",
+                network=network,
+                fetched_at=fetched_at,
+            )
         if not operations:
             return _insufficient_evidence_bundle(
                 claim,
@@ -87,7 +103,15 @@ def verify_payment(
             )
 
         # Fetch effects for account_merge amount lookup.
-        effects = client.fetch_effects(claim.transaction_hash)
+        try:
+            effects = client.fetch_effects(claim.transaction_hash)
+        except StellarFetchError as exc:
+            return _insufficient_evidence_bundle(
+                claim,
+                reason=f"Network error fetching effects: {exc}",
+                network=network,
+                fetched_at=fetched_at,
+            )
 
         try:
             evidence = extract_evidence(tx_data, operations, effects)

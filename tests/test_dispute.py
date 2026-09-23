@@ -242,3 +242,38 @@ class TestAdjudicateDispute:
         ev_b = _make_evidence(tx_hash=TX_HASH_B, memo="INV-184")
         result = adjudicate_dispute(claim_a, ev_a, claim_b, ev_b)
         assert result.dispute_verdict == CONTRADICTION
+
+
+class TestOperationsListContradiction:
+    """F6: find_contradictions must check the operations list, not just
+    top-level fields. If two evidences from the same tx have different
+    operations lists, that's a contradiction.
+    """
+
+    def test_different_operations_list_produces_contradiction(self):
+        """Invariant: same tx but different operations → CONTRADICTION.
+
+        Mutation caught: if we only checked top-level fields, this
+        would be reported as consistent (both have the same top-level
+        amount from the first operation).
+        """
+        op1 = _make_op()
+        op2 = _make_op(amount_stroops=2000000000)
+
+        ev_a = _make_evidence(operations=[op1])
+        ev_b = _make_evidence(operations=[op1, op2])
+
+        checks = find_contradictions(ev_a, ev_b)
+        ops_check = [c for c in checks if c.name == "contradiction_operations"]
+        assert len(ops_check) == 1
+        assert ops_check[0].status == FAIL
+
+    def test_same_operations_list_no_contradiction(self):
+        """Invariant: same tx with same operations → no contradiction."""
+        op = _make_op()
+        ev_a = _make_evidence(operations=[op])
+        ev_b = _make_evidence(operations=[op])
+
+        checks = find_contradictions(ev_a, ev_b)
+        ops_check = [c for c in checks if c.name == "contradiction_operations"]
+        assert len(ops_check) == 0

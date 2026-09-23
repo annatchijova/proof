@@ -140,6 +140,24 @@ def find_contradictions(
             if result is not None:
                 checks.append(result)
 
+        # Check the operations list — if both evidences come from the
+        # same transaction, the operations must be identical. A different
+        # operations list (e.g., a removed operation) would not be caught
+        # by the top-level field checks above.
+        ops_a = [op.to_dict() for op in evidence_a.operations]
+        ops_b = [op.to_dict() for op in evidence_b.operations]
+        if ops_a != ops_b:
+            checks.append(
+                CheckResult(
+                    name="contradiction_operations",
+                    status=FAIL,
+                    expected=f"{len(ops_a)} operations",
+                    actual=f"{len(ops_b)} operations",
+                    detail="Operations list differs between evidence sets. "
+                           "The evidence reconstruction is inconsistent.",
+                )
+            )
+
         if not checks:
             checks.append(
                 CheckResult(

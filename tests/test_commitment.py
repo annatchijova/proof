@@ -53,7 +53,20 @@ def _make_op(**overrides) -> PaymentOperation:
 
 
 def _make_evidence(**overrides) -> PaymentEvidence:
-    op = _make_op()
+    # If amount_stroops is overridden, propagate to the operation so the
+    # evidence is internally consistent (as it would be in real extraction).
+    op_overrides = {}
+    if "amount_stroops" in overrides:
+        op_overrides["amount_stroops"] = overrides["amount_stroops"]
+    if "sender" in overrides:
+        op_overrides["sender"] = overrides["sender"]
+    if "recipient" in overrides:
+        op_overrides["recipient"] = overrides["recipient"]
+    if "asset_code" in overrides:
+        op_overrides["asset_code"] = overrides["asset_code"]
+    if "asset_issuer" in overrides:
+        op_overrides["asset_issuer"] = overrides["asset_issuer"]
+    op = _make_op(**op_overrides)
     defaults = dict(
         transaction_hash=TX_HASH,
         ledger=200,
@@ -495,3 +508,110 @@ class TestClaimCommitmentField:
         claim = PaymentClaim(transaction_hash=TX_HASH)
         d = claim.to_dict()
         assert "commitment_tx_hash" not in d
+
+
+class TestCommitmentHashMultiOperation:
+    """F4: commitment hash check must try all operations, not just the first.
+
+    A commitment could be for ANY operation in a multi-operation transaction.
+    Before the fix, only the first operation was checked, producing false
+    negatives for commitments on the second or third operation.
+    """
+
+    def test_commitment_matches_second_operation(self):
+        """Invariant: a commitment matching the second operation PASSES.
+
+        Mutation caught: if we only checked the first operation, this
+        would FAIL even though the payment actually matches the commitment.
+        """
+        from proof.adjudicator import adjudicate_with_commitment
+
+        # First operation: 1000000000 stroops (the default).
+        op1 = _make_op()
+        # Second operation: 5000000 stroops (the commitment is for this).
+        op2 = _make_op(amount_stroops=5000000)
+
+        evidence = PaymentEvidence(
+            transaction_hash=TX_HASH,
+            ledger=200,
+            timestamp_unix=1700001000,
+            successful=True,
+            sender=SENDER,
+            recipient=RECIPIENT,
+            asset_code="XLM",
+            asset_issuer=None,
+            amount_stroops=1000000000,  # top-level from first op
+            memo="INV-184",
+            memo_type="text",
+            operation_type="payment",
+            operations=[op1, op2],
+        )
+
+        # Commitment terms for the SECOND operation's amount.
+        terms = CommitmentTerms(
+            sender=SENDER,
+            recipient=RECIPIENT,
+            asset_code="XLM",
+            asset_issuer=None,
+            amount_stroops=5000000,
+            reference="INV-184",
+        )
+        commitment = PaymentCommitment(
+            commitment_tx_hash=COMMIT_TX_HASH,
+            commitment_ledger=100,
+            commitment_timestamp_unix=1700000000,
+            reference="INV-184",
+            committed_hash=terms.commitment_hash(),
+            terms=terms,
+        )
+
+        claim = PaymentClaim(transaction_hash=TX_HASH, commitment_tx_hash=COMMIT_TX_HASH)
+        checks = adjudicate_with_commitment(claim, evidence, commitment)
+        hash_check = next(c for c in checks if c.name == "commitment_hash_matches")
+        assert hash_check.status == PASS
+
+    def test_commitment_no_operation_matches_fails(self):
+        """Invariant: if no operation matches, the check FAILS."""
+        from proof.adjudicator import adjudicate_with_commitment
+
+        op1 = _make_op(amount_stroops=1000000000)
+        op2 = _make_op(amount_stroops=2000000000)
+
+        evidence = PaymentEvidence(
+            transaction_hash=TX_HASH,
+            ledger=200,
+            timestamp_unix=1700001000,
+            successful=True,
+            sender=SENDER,
+            recipient=RECIPIENT,
+            asset_code="XLM",
+            asset_issuer=None,
+            amount_stroops=1000000000,
+            memo="INV-184",
+            memo_type="text",
+            operation_type="payment",
+            operations=[op1, op2],
+        )
+
+        # Commitment for an amount that doesn't match any operation.
+        terms = CommitmentTerms(
+            sender=SENDER,
+            recipient=RECIPIENT,
+            asset_code="XLM",
+            asset_issuer=None,
+            amount_stroops=999999999,
+            reference="INV-184",
+        )
+        commitment = PaymentCommitment(
+            commitment_tx_hash=COMMIT_TX_HASH,
+            commitment_ledger=100,
+            commitment_timestamp_unix=1700000000,
+            reference="INV-184",
+            committed_hash=terms.commitment_hash(),
+            terms=terms,
+        )
+
+        claim = PaymentClaim(transaction_hash=TX_HASH, commitment_tx_hash=COMMIT_TX_HASH)
+        checks = adjudicate_with_commitment(claim, evidence, commitment)
+        hash_check = next(c for c in checks if c.name == "commitment_hash_matches")
+        assert hash_check.status == FAIL

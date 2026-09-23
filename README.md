@@ -124,7 +124,7 @@ proof/
   adjudicator.py     # compare claim vs evidence, produce checks + verdict
   verifier.py        # independent stdlib-only bundle verifier
   engine.py          # main entry point: verify_payment(claim, network)
-tests/               # 138 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp
+tests/               # 154 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp, stellar_client
 ```
 
 ## Try it
@@ -153,11 +153,11 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-138 tests covering: canonical serialization, claim validation, adjudication
+154 tests covering: canonical serialization, claim validation, adjudication
 logic, tamper detection, determinism, multi-operation extraction, path
 payments, account merge, memo type classification, commitment hashing,
-commitment adjudication, receipt issuance, dispute resolution, and API/MCP
-boundary validation.
+commitment adjudication, receipt issuance, dispute resolution, API/MCP
+boundary validation, and Stellar client error handling.
 
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md).

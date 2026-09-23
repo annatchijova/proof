@@ -378,6 +378,12 @@ python -m proof.mcp_server
   auth/rate-limiting for production.
 - **No caching:** each API call fetches fresh ledger data.
 - **No streaming:** results are returned as a single JSON response.
+- **No TLS certificate pinning:** the Stellar SDK uses system CAs.
+  PROOF is only as trustworthy as its Horizon connection. For high-assurance
+  deployments, consider: (1) pinning the Horizon server's certificate,
+  (2) fetching from multiple Horizon instances and comparing results,
+  (3) running a local Horizon node. See the red team review
+  (`docs/red-team-review.md`, Finding 3) for details.
 
 ## Falsifiers
 
