@@ -414,6 +414,56 @@ python -m proof.mcp_server
   (3) running a local Horizon node. See the red team review
   (`docs/red-team-review.md`, Finding 3) for details.
 
+## Public deployment
+
+The API is deployed on Google Cloud Run:
+
+```
+https://proof-api-1028999311218.us-central1.run.app
+```
+
+### Read-only operations (public)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | User-facing verification UI |
+| `/health` | GET | Health check |
+| `/verify` | POST | Verify a payment claim against the ledger |
+| `/verify/dispute` | POST | Verify a dispute between two claims |
+| `/onchain/commitment` | GET | Retrieve a commitment from the Soroban contract |
+| `/onchain/receipt` | GET | Retrieve a receipt from the Soroban contract |
+
+### Write operations (require funded identity — not enabled publicly)
+
+| Endpoint | Method | Requires |
+|---|---|---|
+| `/commit` | POST | Funded Stellar identity (Secret Manager) |
+| `/onchain/register-receipt` | POST | Funded Stellar identity (Secret Manager) |
+| `/receipt` | POST | Local execution only |
+
+The public deployment uses an unfunded Stellar identity stored in Google
+Secret Manager. Read-only operations work because Soroban simulation does
+not require a funded account. Write operations fail naturally with "Account
+not found" because the identity has no XLM. This preserves the frozen
+authorization model — no public writes, no shortcuts for the demo.
+
+### Known deployment blockers (unresolved)
+
+These blockers are documented as open limitations, not as resolved
+properties:
+
+- **Public writes disabled:** the public deployment cannot register
+  commitments or receipts on-chain. Enabling writes requires a funded
+  identity in Secret Manager and is a post-freeze decision.
+- **No rate limiting:** the public API has no rate limiting. A determined
+  caller could exhaust the Testnet Horizon quota.
+- **No TLS pinning to Horizon:** Cloud Run terminates TLS for the client,
+  but the server-to-Horizon connection uses system CAs (Finding 3).
+- **Cold starts:** Cloud Run may add 1-2s latency on the first request
+  after idle. Subsequent requests are fast.
+- **Testnet pruning:** Testnet transactions may be pruned. The demo
+  references a specific tx that may eventually become unavailable.
+
 ## Falsifiers
 
 - **Determinism claim:** if two runs of the same claim + evidence produce
@@ -427,11 +477,12 @@ python -m proof.mcp_server
 
 ## Protocol freeze
 
-The PROOF protocol and Soroban contract are frozen as of this commit.
-No changes to the contract interface, the commitment hash computation,
-the evidence bundle schema, or the verdict semantics will be made
-before the hackathon deadline. Bug fixes, tests, and deployment wiring
-are allowed; new product capabilities are not.
+The PROOF protocol, Soroban contract, and public deployment are frozen
+as of this commit. No changes to the contract interface, the commitment
+hash computation, the evidence bundle schema, the verdict semantics, or
+the public API surface will be made before the hackathon deadline. Bug
+fixes, tests, UI/demo polish, documentation, and product validation are
+allowed; new product capabilities are not.
 
 Frozen components:
 - Soroban contract: `proof-registry` v0.1.0 (Testnet ID above)
@@ -440,3 +491,7 @@ Frozen components:
   scope_notes, seal, chain_of_custody, optional commitment)
 - Verdicts: VERIFIED, NOT_VERIFIED, INSUFFICIENT_EVIDENCE
 - Check statuses: PASS, FAIL, ABSTAIN
+- Public API: 6 read-only endpoints, 3 write endpoints (writes disabled
+  on public deployment)
+- MCP tools: 8 tools (4 verification, 4 Soroban)
+- Test suite: 161 tests, 0 skipped

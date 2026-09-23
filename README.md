@@ -150,7 +150,39 @@ from the deployed Soroban contract.
 
 ## Try it
 
-### Option 1: Web UI
+### Option 1: Public API (read-only)
+
+The API is deployed on Google Cloud Run:
+
+```
+https://proof-api-1028999311218.us-central1.run.app
+```
+
+Public read-only operations (no credentials required):
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | User-facing verification UI |
+| `/health` | GET | Health check |
+| `/verify` | POST | Verify a payment claim against the ledger |
+| `/verify/dispute` | POST | Verify a dispute between two claims |
+| `/onchain/commitment` | GET | Retrieve a commitment from the Soroban contract |
+| `/onchain/receipt` | GET | Retrieve a receipt from the Soroban contract |
+
+Write operations require a funded Soroban identity and are **not enabled** on
+the public deployment:
+
+| Endpoint | Method | Requires |
+|---|---|---|
+| `/commit` | POST | Funded Stellar identity (Secret Manager) |
+| `/onchain/register-receipt` | POST | Funded Stellar identity (Secret Manager) |
+| `/receipt` | POST | Local execution only |
+
+The public deployment uses an unfunded identity so writes fail naturally
+without leaking protocol semantics. This preserves the frozen authorization
+model — no shortcuts for the demo.
+
+### Option 2: Local Web UI
 
 ```bash
 cd proof
@@ -161,7 +193,7 @@ uvicorn proof.api:app --host 0.0.0.0 --port 8000
 Open `http://localhost:8000` in your browser. Enter a Stellar transaction
 hash and optional claim fields, then click "Verify Payment".
 
-### Option 2: Command line
+### Option 3: Command line
 
 ```bash
 cd proof
@@ -179,7 +211,7 @@ print(bundle.seal)
 "
 ```
 
-### Option 3: Real end-to-end against Testnet
+### Option 4: Real end-to-end against Testnet
 
 ```bash
 python scripts/testnet_e2e.py

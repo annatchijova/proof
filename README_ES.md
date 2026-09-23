@@ -151,7 +151,39 @@ fueron recuperados del contrato Soroban desplegado.
 
 ## Probalo
 
-### Opción 1: Web UI
+### Opción 1: API pública (read-only)
+
+La API está desplegada en Google Cloud Run:
+
+```
+https://proof-api-1028999311218.us-central1.run.app
+```
+
+Operaciones públicas read-only (sin credenciales):
+
+| Endpoint | Method | Descripción |
+|---|---|---|
+| `/` | GET | UI de verificación |
+| `/health` | GET | Health check |
+| `/verify` | POST | Verificar un claim de pago contra el ledger |
+| `/verify/dispute` | POST | Verificar una disputa entre dos claims |
+| `/onchain/commitment` | GET | Recuperar un commitment del contrato Soroban |
+| `/onchain/receipt` | GET | Recuperar un receipt del contrato Soroban |
+
+Operaciones de escritura requieren una identidad Soroban fondeada y **no
+están habilitadas** en el deployment público:
+
+| Endpoint | Method | Requiere |
+|---|---|---|
+| `/commit` | POST | Identidad Stellar fondeada (Secret Manager) |
+| `/onchain/register-receipt` | POST | Identidad Stellar fondeada (Secret Manager) |
+| `/receipt` | POST | Solo ejecución local |
+
+El deployment público usa una identidad sin fondos para que los writes
+fallen naturalmente sin filtrar semántica del protocolo. Esto preserva el
+modelo de autorización congelado — sin atajos para la demo.
+
+### Opción 2: Web UI local
 
 ```bash
 cd proof
@@ -163,7 +195,7 @@ Abrí `http://localhost:8000` en el navegador. Ingresá un hash de
 transacción de Stellar y los campos opcionales del claim, y hacé clic
 en "Verify Payment".
 
-### Opción 2: Línea de comandos
+### Opción 3: Línea de comandos
 
 ```bash
 cd proof
@@ -181,7 +213,7 @@ print(bundle.seal)
 "
 ```
 
-### Opción 3: End-to-end real contra Testnet
+### Opción 4: End-to-end real contra Testnet
 
 ```bash
 python scripts/testnet_e2e.py
