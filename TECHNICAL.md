@@ -412,6 +412,10 @@ core. The API never modifies verdicts, seals, or evidence. Input
 validation happens at the boundary (Pydantic models + PaymentClaim
 validation) before reaching the engine.
 
+The UI accessibility/state audit is recorded in
+[`docs/ui-accessibility-audit.md`](docs/ui-accessibility-audit.md); it
+separates automated evidence from browser checks that remain manual.
+
 Run the API:
 ```bash
 uvicorn proof.api:app --reload
