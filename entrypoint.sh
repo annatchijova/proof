@@ -1,5 +1,8 @@
 #!/bin/bash
 set -euo pipefail
+# Keep the generated Stellar identity (which contains the signing seed)
+# private even if the container's default umask is permissive.
+umask 077
 
 # Create the stellar CLI identity from the seed phrase if provided.
 # This is needed for Soroban contract invocations (read and write).
