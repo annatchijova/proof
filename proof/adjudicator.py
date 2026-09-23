@@ -16,6 +16,7 @@ No float, no probability, no LLM. Pure deterministic comparison.
 from __future__ import annotations
 
 from .claim import PaymentClaim
+from .commitment import PaymentCommitment
 from .evidence import (
     ABSTAIN,
     FAIL,
@@ -315,3 +316,144 @@ def compute_verdict(checks: list[CheckResult]) -> str:
     if has_fail:
         return NOT_VERIFIED
     return VERIFIED
+
+
+def _check_commitment_terms_against_evidence(
+    commitment: PaymentCommitment,
+    evidence: PaymentEvidence,
+) -> list[CheckResult]:
+    """Check whether the on-chain commitment matches the payment evidence.
+
+    This is the core L4 check: does the payment that actually happened
+    match the commitment that was registered on-chain?
+
+    The commitment stores a hash of the expected payment terms. We
+    recompute the hash from the actual payment evidence and compare.
+    We also check individual fields for diagnostic detail.
+    """
+    checks: list[CheckResult] = []
+
+    # The commitment was registered before the payment — check temporal order.
+    if commitment.commitment_ledger < evidence.ledger:
+        checks.append(
+            CheckResult(
+                name="commitment_precedes_payment",
+                status=PASS,
+                expected=f"ledger < {evidence.ledger}",
+                actual=str(commitment.commitment_ledger),
+                detail="Commitment was registered before the payment.",
+            )
+        )
+    else:
+        checks.append(
+            CheckResult(
+                name="commitment_precedes_payment",
+                status=FAIL,
+                expected=f"ledger < {evidence.ledger}",
+                actual=str(commitment.commitment_ledger),
+                detail="Commitment was not registered before the payment.",
+            )
+        )
+
+    # The committed hash is the hash of the expected payment terms.
+    # We don't have the terms on-chain (only the hash), so we check
+    # the hash against a recomputed hash from the actual payment.
+    # But we can't recompute without knowing what fields were committed.
+    # The commitment hash is opaque — it's a hash, not the terms.
+    # So we check: does the committed hash match a hash we can compute
+    # from the payment evidence?
+    #
+    # This requires knowing the canonical form of the commitment terms.
+    # The committer used CommitmentTerms.to_dict() -> seal().
+    # We reconstruct the terms from the evidence and check.
+    from .commitment import CommitmentTerms
+
+    try:
+        reconstructed_terms = CommitmentTerms(
+            sender=evidence.sender,
+            recipient=evidence.recipient,
+            asset_code=evidence.asset_code,
+            asset_issuer=evidence.asset_issuer,
+            amount_stroops=evidence.amount_stroops,
+            reference=evidence.memo if evidence.memo_type == "text" else None,
+        )
+        reconstructed_hash = reconstructed_terms.commitment_hash()
+    except Exception as exc:
+        checks.append(
+            CheckResult(
+                name="commitment_hash_matches",
+                status=FAIL,
+                expected=commitment.committed_hash,
+                actual=None,
+                detail=f"Cannot reconstruct commitment terms from evidence: {exc}",
+            )
+        )
+        return checks
+
+    if reconstructed_hash == commitment.committed_hash:
+        checks.append(
+            CheckResult(
+                name="commitment_hash_matches",
+                status=PASS,
+                expected=commitment.committed_hash,
+                actual=reconstructed_hash,
+                detail="Payment evidence matches the on-chain commitment hash.",
+            )
+        )
+    else:
+        checks.append(
+            CheckResult(
+                name="commitment_hash_matches",
+                status=FAIL,
+                expected=commitment.committed_hash,
+                actual=reconstructed_hash,
+                detail="Payment evidence does not match the on-chain commitment hash.",
+            )
+        )
+
+    return checks
+
+
+def adjudicate_with_commitment(
+    claim: PaymentClaim,
+    evidence: PaymentEvidence,
+    commitment: PaymentCommitment | None,
+) -> list[CheckResult]:
+    """Run all checks, including commitment checks if a commitment is present.
+
+    If commitment is None, the commitment checks are ABSTAIN-ed.
+    """
+    checks = adjudicate(claim, evidence)
+
+    if commitment is None:
+        checks.append(
+            CheckResult(
+                name="commitment_exists",
+                status=ABSTAIN,
+                expected=None,
+                actual=None,
+                detail="No commitment transaction hash provided — commitment not checked.",
+            )
+        )
+        checks.append(
+            CheckResult(
+                name="commitment_hash_matches",
+                status=ABSTAIN,
+                expected=None,
+                actual=None,
+                detail="No commitment — hash not checked.",
+            )
+        )
+    else:
+        checks.append(
+            CheckResult(
+                name="commitment_exists",
+                status=PASS,
+                expected=claim.commitment_tx_hash if hasattr(claim, "commitment_tx_hash") else None,
+                actual=commitment.commitment_tx_hash,
+                detail=f"Commitment found on ledger {commitment.commitment_ledger}.",
+            )
+        )
+        checks.extend(_check_commitment_terms_against_evidence(commitment, evidence))
+
+    return checks

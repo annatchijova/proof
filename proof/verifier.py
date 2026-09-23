@@ -27,7 +27,7 @@ def verify_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     issues: list[str] = []
 
     # Extract the sealed payload fields.
-    sealed_payload = {
+    sealed_payload: dict[str, Any] = {
         "version": bundle.get("version"),
         "claim": bundle.get("claim"),
         "evidence": bundle.get("evidence"),
@@ -35,6 +35,11 @@ def verify_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
         "verdict": bundle.get("verdict"),
         "scope_notes": bundle.get("scope_notes"),
     }
+    # L4: commitment is optional. Include it only if present, matching
+    # the producer's behavior (the seal covers commitment only when set).
+    commitment = bundle.get("commitment")
+    if commitment is not None:
+        sealed_payload["commitment"] = commitment
 
     stored_seal = bundle.get("seal")
     if not isinstance(stored_seal, str):

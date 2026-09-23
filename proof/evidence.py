@@ -144,6 +144,9 @@ class EvidenceBundle:
     The sealed_payload contains everything that goes into the SHA-256 hash.
     The seal is computed over canonical(sealed_payload).
     The chain_of_custody is metadata stored beside the seal, not inside it.
+
+    L4: if a commitment was verified, it is included in the sealed payload
+    so the commitment is part of the tamper-evident record.
     """
 
     version: str
@@ -154,6 +157,7 @@ class EvidenceBundle:
     scope_notes: list[str]
     seal: str
     chain_of_custody: dict
+    commitment: dict | None = None
 
     @classmethod
     def build(
@@ -163,9 +167,10 @@ class EvidenceBundle:
         checks: list[dict],
         verdict: str,
         chain_of_custody: dict,
+        commitment: dict | None = None,
     ) -> "EvidenceBundle":
         """Construct a bundle, computing the seal over the sealed payload."""
-        sealed_payload = {
+        sealed_payload: dict = {
             "version": CANONICALIZE_VERSION,
             "claim": claim,
             "evidence": evidence,
@@ -173,6 +178,8 @@ class EvidenceBundle:
             "verdict": verdict,
             "scope_notes": list(SCOPE_NOTES),
         }
+        if commitment is not None:
+            sealed_payload["commitment"] = commitment
         digest = seal(sealed_payload)
         return cls(
             version=CANONICALIZE_VERSION,
@@ -183,11 +190,12 @@ class EvidenceBundle:
             scope_notes=list(SCOPE_NOTES),
             seal=digest,
             chain_of_custody=chain_of_custody,
+            commitment=commitment,
         )
 
     def to_dict(self) -> dict:
         """Full dict representation including seal and chain of custody."""
-        return {
+        result: dict = {
             "version": self.version,
             "claim": self.claim,
             "evidence": self.evidence,
@@ -197,11 +205,14 @@ class EvidenceBundle:
             "seal": self.seal,
             "chain_of_custody": self.chain_of_custody,
         }
+        if self.commitment is not None:
+            result["commitment"] = self.commitment
+        return result
 
     @property
     def sealed_payload(self) -> dict:
         """The portion that was sealed — used by the verifier."""
-        return {
+        result: dict = {
             "version": self.version,
             "claim": self.claim,
             "evidence": self.evidence,
@@ -209,3 +220,6 @@ class EvidenceBundle:
             "verdict": self.verdict,
             "scope_notes": self.scope_notes,
         }
+        if self.commitment is not None:
+            result["commitment"] = self.commitment
+        return result

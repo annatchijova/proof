@@ -206,6 +206,69 @@ meaningfully — those produce ABSTAIN.
   registration.
 - **No API/MCP server:** L6 will expose verification as an API.
 
+## L4: Commitments and receipts on-chain
+
+L4 adds the ability to register payment commitments on-chain and verify
+payments against them. A commitment is a pre-registered expectation of a
+payment, stored as a hash in a `manage_data` operation.
+
+### Commitment flow
+
+1. Before the payment, the committer creates `CommitmentTerms` with the
+   expected payment fields (sender, recipient, asset, amount, reference).
+2. The committer computes `commitment_hash = SHA-256(canonical(terms))`.
+3. The committer submits a transaction with a `manage_data` operation:
+   - key: `PROOF:COMMIT:<reference>` (e.g., `PROOF:COMMIT:INV-184`)
+   - value: base64-encoded commitment hash
+4. When the payment later occurs, PROOF:
+   - fetches the payment evidence (L1-L3)
+   - fetches the commitment transaction (via `commitment_tx_hash` in the claim)
+   - extracts the commitment from the `manage_data` operation
+   - reconstructs the commitment terms from the actual payment evidence
+   - recomputes the hash and compares with the committed hash
+   - checks that the commitment was registered before the payment (temporal order)
+
+### Commitment checks
+
+| Check | Description |
+|---|---|
+| `commitment_exists` | Was a commitment found for the given tx hash? |
+| `commitment_precedes_payment` | Was the commitment registered before the payment? |
+| `commitment_hash_matches` | Does the payment evidence match the committed hash? |
+
+If no `commitment_tx_hash` is provided in the claim, all commitment checks
+are ABSTAIN — the payment is verified without commitment context.
+
+### Receipts
+
+After verifying a payment, PROOF can issue a `Receipt` — the seal of the
+evidence bundle, registrable on-chain via `manage_data`:
+- key: `PROOF:RECEIPT:<transaction_hash>`
+- value: the bundle seal
+
+This creates an on-chain record that PROOF verified the payment at a
+specific time. The receipt is outside the seal (it contains the seal, not
+the other way around).
+
+### On-chain storage mechanism
+
+L4 uses Stellar's native `manage_data` operations rather than Soroban smart
+contracts. This is simpler, requires no contract deployment, and is
+sufficient for storing commitment hashes and receipt seals. The commitment
+is a hash, so it doesn't reveal the payment details (privacy) and is
+tamper-evident (can't change after the transaction is on the ledger).
+
+## Known limitations (L4)
+
+- **Commitment terms not on-chain:** only the commitment hash is stored
+  on-chain. The terms (sender, recipient, etc.) are known to the committer
+  but not to PROOF. PROOF reconstructs them from the payment evidence and
+  checks the hash. This means PROOF can verify that the payment matches the
+  commitment, but cannot independently recover the commitment terms.
+- **No Soroban integration:** L4 uses `manage_data` only. Smart contract
+  integration (Soroban) is a future enhancement.
+- **No API/MCP server:** L6 will expose verification as an API.
+
 ## Falsifiers
 
 - **Determinism claim:** if two runs of the same claim + evidence produce

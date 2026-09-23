@@ -7,16 +7,22 @@ extractor, the adjudicator, and the sealer into one deterministic pipeline:
     PaymentClaim
         |
         v
-    Stellar Horizon (fetch tx + operations)
+    Stellar Horizon (fetch tx + operations + effects)
         |
         v
     Extractor (reconstruct payment evidence)
         |
         v
-    Adjudicator (compare claim vs evidence)
+    [Optional] Commitment fetch + extraction
+        |
+        v
+    Adjudicator (compare claim vs evidence, optionally vs commitment)
         |
         v
     EvidenceBundle (sealed with SHA-256)
+        |
+        v
+    [Optional] Receipt issuance
 
 If anything fails — transaction not found, extraction error, network error —
 the engine returns INSUFFICIENT_EVIDENCE, never VERIFIED. Fail closed.
@@ -26,8 +32,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from .adjudicator import adjudicate, compute_verdict
+from .adjudicator import adjudicate, adjudicate_with_commitment, compute_verdict
 from .claim import PaymentClaim
+from .commitment import PaymentCommitment, Receipt
+from .commitment_extractor import CommitmentExtractionError, extract_commitment
 from .evidence import (
     INSUFFICIENT_EVIDENCE,
     EvidenceBundle,
@@ -36,7 +44,7 @@ from .evidence import (
 from .extractor import ExtractionError, extract_evidence
 from .stellar_client import StellarClient
 
-VERSION = "0.1.0"
+VERSION = "0.3.0"
 
 
 def verify_payment(
@@ -46,11 +54,14 @@ def verify_payment(
     """Verify a payment claim against the Stellar ledger.
 
     Args:
-        claim: The payment claim to verify.
+        claim: The payment claim to verify. If claim.commitment_tx_hash is
+            set, the engine will also fetch and verify the commitment.
         network: "testnet" or "mainnet".
 
     Returns:
         An EvidenceBundle with the verdict, checks, and SHA-256 seal.
+        If a commitment was verified, the bundle also includes commitment
+        data and a receipt.
     """
     fetched_at = int(time.time())
 
@@ -87,26 +98,61 @@ def verify_payment(
                 fetched_at=fetched_at,
             )
 
-        checks = adjudicate(claim, evidence)
+        # Optionally fetch and verify a commitment.
+        commitment: PaymentCommitment | None = None
+        if claim.commitment_tx_hash is not None:
+            commitment_tx_data = client.fetch_transaction(claim.commitment_tx_hash)
+            if commitment_tx_data is None:
+                # Commitment not found — fail the commitment check but
+                # continue with the payment verification.
+                commitment = None
+            else:
+                commitment_ops = client.fetch_operations(claim.commitment_tx_hash)
+                try:
+                    commitment = extract_commitment(commitment_tx_data, commitment_ops)
+                except CommitmentExtractionError:
+                    commitment = None
+
+        checks = adjudicate_with_commitment(claim, evidence, commitment)
         verdict = compute_verdict(checks)
 
-        chain_of_custody = {
+        chain_of_custody: dict[str, Any] = {
             "network": network,
             "horizon_url": client.horizon_url,
             "fetched_at": fetched_at,
             "tool_version": VERSION,
             "transaction_hash": claim.transaction_hash,
         }
+        if commitment is not None:
+            chain_of_custody["commitment_tx_hash"] = commitment.commitment_tx_hash
 
-        return EvidenceBundle.build(
+        bundle = EvidenceBundle.build(
             claim=claim.to_dict(),
             evidence=evidence.to_dict(),
             checks=[c.to_dict() for c in checks],
             verdict=verdict,
             chain_of_custody=chain_of_custody,
+            commitment=commitment.to_dict() if commitment is not None else None,
         )
+
+        return bundle
     finally:
         client.close()
+
+
+def issue_receipt(bundle: EvidenceBundle) -> Receipt:
+    """Issue a receipt for a verified payment.
+
+    The receipt contains the transaction hash, the verdict, and the seal
+    of the evidence bundle. It can be registered on-chain via a manage_data
+    operation with key=PROOF:RECEIPT:<tx_hash> and value=seal.
+    """
+    return Receipt(
+        transaction_hash=bundle.claim.get("transaction_hash", ""),
+        verdict=bundle.verdict,
+        seal=bundle.seal,
+        issued_at=int(time.time()),
+    )
 
 
 def _insufficient_evidence_bundle(

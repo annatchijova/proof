@@ -92,6 +92,7 @@ class PaymentClaim:
     reference: str | None = None
     ledger_min: int | None = None
     ledger_max: int | None = None
+    commitment_tx_hash: str | None = None
 
     def __post_init__(self) -> None:
         validate_tx_hash(self.transaction_hash)
@@ -115,6 +116,11 @@ class PaymentClaim:
             raise ValueError(
                 f"ledger_min ({self.ledger_min}) > ledger_max ({self.ledger_max})"
             )
+        if self.commitment_tx_hash is not None:
+            if not is_valid_tx_hash(self.commitment_tx_hash):
+                raise ValueError(
+                    f"commitment_tx_hash is not a valid 64-char hex hash: {self.commitment_tx_hash!r}"
+                )
 
     def to_dict(self) -> dict:
         """Return a dict with only the non-None fields (for canonical serialization)."""
@@ -128,6 +134,7 @@ class PaymentClaim:
             "reference",
             "ledger_min",
             "ledger_max",
+            "commitment_tx_hash",
         ):
             value = getattr(self, field)
             if value is not None:
