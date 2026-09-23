@@ -2,7 +2,7 @@
 
 **Repositorio:** `https://github.com/annatchijova/proof`
 **Autora:** Anna Tchijova
-**Última actualización:** Junio 2026
+**Última actualización:** Septiembre 2026
 
 > This guide is also available in English: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
