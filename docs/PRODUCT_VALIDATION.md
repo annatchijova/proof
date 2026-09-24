@@ -260,7 +260,8 @@ At the time of this document:
 * MCP interface: **implemented**;
 * Soroban contract: **deployed and validated on Stellar Testnet**;
 * adversarial/red-team review: **performed; identified findings addressed**;
-* automated test suite: **161 passing, 0 skipped**;
+* automated test suite: covered by the repository's test command; the current
+  count is intentionally not hard-coded here;
 * public deployment: **deployed on Google Cloud Run**;
 * real-user problem validation: **pending**.
 
@@ -455,4 +456,3 @@ tras la mutación, y el commitment y receipt on-chain fueron recuperados del
 contrato Soroban desplegado.
 
 ---
-

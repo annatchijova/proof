@@ -119,11 +119,12 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-161 tests covering: canonical serialization, claim validation,
-adjudication, tamper detection, determinism, multi-operation
-extraction, path payments, account merge, memo types, commitment
-hashing, receipt issuance, dispute resolution, API/MCP boundary
- validation, and Stellar client error handling.
+The suite covers canonical serialization, claim validation, adjudication,
+tamper detection, determinism, multi-operation extraction, path payments,
+account merge, memo types, commitment hashing, receipt issuance, dispute
+resolution, API/MCP boundary validation, and Stellar client error handling.
+Run the command above to obtain the current count for the checkout being
+inspected.
 
 For a recorded clean-room check using a fresh shallow clone, see
 [`docs/fresh-clone-reproducibility.md`](docs/fresh-clone-reproducibility.md).
@@ -273,12 +274,12 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-161 tests cubriendo: serialización canónica, validación de claims,
-adjudicación, detección de tampering, determinismo, extracción
-multi-operación, path payments, account merge, tipos de memo,
-hashing de commitments, emisión de receipts, resolución de disputas,
-validación de boundary API/MCP, y manejo de errores del Stellar
-client.
+La suite cubre serialización canónica, validación de claims, adjudicación,
+detección de tampering, determinismo, extracción multi-operación, path
+payments, account merge, tipos de memo, hashing de commitments, emisión de
+receipts, resolución de disputas, boundary API/MCP y manejo de errores del
+cliente Stellar. Ejecutá el comando anterior para obtener el conteo actual
+del checkout que estés inspeccionando.
 
 ### End-to-end contra Testnet real
 

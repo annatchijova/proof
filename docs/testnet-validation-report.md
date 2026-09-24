@@ -4,6 +4,21 @@ Date: 2026-09-23
 Network: Stellar Testnet (Test SDF Network ; September 2015)
 Contract ID: `CDY3VWVDMRNMPGENYV4BCVNVVGLUWF76TQTSOJOOBOPG4XXLTEH7NT4I`
 
+> Historical execution record. This report documents a complete payment →
+> Soroban commitment/receipt run using payment transaction `dde823...` at
+> ledger `4821041`. It is separate from the current Checkpoint 2 UI example,
+> which uses payment transaction `0ef764...` at ledger `4821215` for the public
+> read-only demo. The two executions have different claims, seals, and ledger
+> records; neither is presented as metadata for the other.
+
+For the current Checkpoint 2 execution, the public deployment also exposes
+the matching read-only Soroban records for reference `INV-TEST-129650` and
+payment `0ef764...`: commitment ledger `4821217` and receipt ledger `4821218`,
+with receipt verdict `VERIFIED` and seal
+`c6d21734805d59886bc9a629893eb108a0666c74a03ed6e19e5abdc50e1b7d51`. Those
+records are cited by the current UI; the detailed command transcript below
+remains the historical `dde823...` run.
+
 ---
 
 ## 1. Testnet paths actually executed
@@ -284,26 +299,17 @@ mechanism should be primary.
 
 ---
 
-## 10. Remaining blockers to a public deployed demo
+## 10. Historical follow-up items
 
-1. **API deployment:** The FastAPI app needs to be deployed to a public
-   URL (e.g., Railway, Fly.io, Render). The UI is ready and tested
-   locally.
+This section records the state at the time of this historical report. The
+public deployment and Soroban API wiring were completed subsequently and are
+documented in the current README and `TECHNICAL.md`.
 
-2. **Contract ID configuration:** The deployed contract ID needs to be
-   configurable (environment variable) so the API can interact with the
-   Testnet contract.
-
-3. **Soroban integration in the API:** The API currently does not call
-   the Soroban contract. A `/commit` endpoint that registers a
-   commitment on the contract after verification would complete the
-   loop. This is API wiring, not a new product capability.
-
-4. **Rate limiting / auth:** The API has no authentication or rate
+1. **Rate limiting / auth:** The API has no authentication or rate
    limiting. For a public demo, this should be behind a gateway or
    have basic rate limiting. Documented as F7 in the red team review.
 
-5. **Testnet reliability:** Testnet transactions may be pruned. The
+2. **Testnet reliability:** Testnet transactions may be pruned. The
    adversarial tests handle this by skipping if the tx is not found,
    but a public demo should use a freshly submitted tx or a stable
    testnet account.

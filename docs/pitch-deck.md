@@ -30,8 +30,8 @@ Unspecified fields are `ABSTAIN`, not “match anything”.
 ### 4. Live proof
 
 Load the real Testnet example in the UI. Show the successful payment, the
-checks, the verdict, and the SHA-256 seal. Then change the amount to the wrong
-value and show `NOT_VERIFIED`.
+checks, the ledger, and the SHA-256 seal. Then change only the amount and show
+`NOT_VERIFIED`. Show `INSUFFICIENT_EVIDENCE` only if time permits.
 
 ### 5. Why the result is trustworthy
 
@@ -58,7 +58,7 @@ payment, get `VERIFIED`, change the amount, and immediately get
 `NOT_VERIFIED`. PROOF verifies what the ledger can prove, not what a screenshot
 claims.”
 
-## Five-minute version
+## Optional deeper discussion — not part of the Checkpoint 2 demo
 
 Use the three-minute version, then add:
 
@@ -76,8 +76,8 @@ Use the three-minute version, then add:
 
 ## Claims that are safe to say aloud
 
-- “The current repository test suite contains 161 tests.”
-- “The Testnet example has been validated end-to-end and is linked from the UI.”
+- “The current Testnet example is linked from the UI and was manually verified
+  against Horizon Testnet.”
 - “The seal covers the canonical evidence payload, not retrieval metadata.”
 - “The verifier detects mutations to sealed fields.”
 

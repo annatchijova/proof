@@ -538,6 +538,16 @@ the public API surface will be made before the hackathon deadline. Bug
 fixes, tests, UI/demo polish, documentation, and product validation are
 allowed; new product capabilities are not.
 
+### Checkpoint 2 presentation freeze
+
+The official Checkpoint 2 demo is the public read-only journey documented in
+[`docs/checkpoint-2-scope.md`](docs/checkpoint-2-scope.md): a real Testnet
+claim produces `VERIFIED`, one changed claim property produces
+`NOT_VERIFIED`, and an unestablished transaction produces
+`INSUFFICIENT_EVIDENCE`. Soroban is shown only through existing read evidence;
+public writes are not part of the demo. MCP, disputes, architecture internals,
+and operational hardening remain outside this presentation scope.
+
 Frozen components:
 - Soroban contract: `proof-registry` v0.1.0 (Testnet ID above)
 - Commitment hash: `SHA-256(canonical(CommitmentTerms))` — version 1
@@ -548,7 +558,8 @@ Frozen components:
 - Public API: 6 read-only endpoints, 3 write endpoints (writes disabled
   on public deployment)
 - MCP tools: 8 tools (4 verification, 4 Soroban)
-- Test suite: 161 tests, 0 skipped
+- Test suite: run `python -m pytest tests/ -v` for the current checkout; no
+  static test count is treated as a release claim.
 
 ## Screenshots
 

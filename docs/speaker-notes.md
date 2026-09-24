@@ -25,8 +25,8 @@ Say:
 > recipient, asset, amount, reference, and ledger window. It reconstructs the
 > payment facts from Horizon and compares each assertion independently.
 
-Point at the first three steps of the architecture diagram. Do not explain
-every module yet.
+Point at the transaction hash and the claim fields in the UI. Do not explain
+modules or architecture yet.
 
 ### 0:55–1:20 — Explain the verdicts
 

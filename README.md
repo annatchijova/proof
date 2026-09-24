@@ -4,7 +4,7 @@
   <img src="visual/logo.png" alt="PROOF logo" width="240">
 </p>
 
-**English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Install](INSTALL.md) | [Product Validation](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
+**English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Install](INSTALL.md) | [Checkpoint 2 scope](docs/checkpoint-2-scope.md) | [Product Validation](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
 
 ## The problem
 
@@ -145,7 +145,7 @@ proof/
   soroban/proof-registry/  # Soroban registry contract (Rust, optional to build locally)
 scripts/
   testnet_e2e.py     # real end-to-end test against Stellar Testnet
-tests/               # 161 tests: canonicalization, adjudication, determinism, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversarial
+tests/               # behavioral and regression tests for the verification core and interfaces
 ```
 
 ## Live Testnet proof
@@ -245,12 +245,11 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-161 tests covering: canonical serialization, claim validation, adjudication
-logic, tamper detection, determinism, multi-operation extraction, path
-payments, account merge, memo type classification, commitment hashing,
-commitment adjudication, receipt issuance, dispute resolution, API/MCP
-boundary validation, Stellar client error handling, and adversarial
-verification against real Testnet transactions.
+The test suite covers canonical serialization, claim validation, adjudication,
+tamper detection, determinism, multi-operation extraction, path payments,
+account merge, memo types, commitments, receipts, disputes, API/MCP boundaries,
+Stellar client error handling, and adversarial verification. Run the command
+above to obtain the current count for the checkout being inspected.
 
 For the full architecture, threat model, and design decisions, see the
 [Technical README](TECHNICAL.md). For a field-by-field bundle example, see

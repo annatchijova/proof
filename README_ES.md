@@ -4,7 +4,7 @@
   <img src="visual/logo.png" alt="Logo de PROOF" width="240">
 </p>
 
-[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
+[Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Scope Checkpoint 2](docs/checkpoint-2-scope.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
 
 ## El problema
 
@@ -146,7 +146,7 @@ proof/
   soroban/proof-registry/  # contrato registry Soroban (Rust, opcional de compilar localmente)
 scripts/
   testnet_e2e.py     # test end-to-end real contra Stellar Testnet
-tests/               # 161 tests: canonicalización, adjudicación, determinismo, boundary, extractor, commitment, dispute, api, mcp, stellar_client, adversariales
+tests/               # tests de comportamiento y regresión del core y sus interfaces
 ```
 
 ## Evidencia en Testnet
@@ -247,13 +247,12 @@ source .venv/bin/activate
 python -m pytest tests/ -v
 ```
 
-161 tests cubriendo: serialización canónica, validación de claims,
-lógica de adjudicación, detección de alteraciones, determinismo,
-extracción multi-operación, path payments, account merge,
-clasificación de memo types, hashing de commitments, adjudicación de
-commitments, emisión de receipts, resolución de disputas, validación
-de boundary de API/MCP, manejo de errores del cliente Stellar, y
-verificación adversarial contra transacciones reales de Testnet.
+La suite cubre serialización canónica, validación de claims, adjudicación,
+detección de alteraciones, determinismo, extracción multi-operación, path
+payments, account merge, tipos de memo, commitments, receipts, disputas,
+boundary API/MCP, manejo de errores del cliente Stellar y verificación
+adversarial. Ejecutá el comando anterior para obtener el conteo actual del
+checkout que estés inspeccionando.
 
 Para la arquitectura completa, modelo de amenazas, y decisiones de diseño,
 ver el [Technical README](TECHNICAL.md). Para un ejemplo anotado campo por
