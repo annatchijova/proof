@@ -6,6 +6,15 @@
 
 [Español](README_ES.md) | **English** | [Technical README](TECHNICAL.md) | [Instalación](INSTALL.md) | [Scope Checkpoint 2](docs/checkpoint-2-scope.md) | [Validación de Producto](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
 
+## Mirá el video / Probalo
+
+[Video demo](https://youtu.be/-H_AL4D6Am8)
+
+**Please select 1080p quality when watching the video for the best
+viewing experience.**
+
+App en vivo: [proof-api-1028999311218.us-central1.run.app](https://proof-api-1028999311218.us-central1.run.app/)
+
 ## El problema
 
 Alguien te manda una captura diciendo que te pagó. La mirás. Parece real.

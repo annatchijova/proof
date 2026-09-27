@@ -6,6 +6,15 @@
 
 **English** | [Español](README_ES.md) | [Technical README](TECHNICAL.md) | [Install](INSTALL.md) | [Checkpoint 2 scope](docs/checkpoint-2-scope.md) | [Product Validation](docs/PRODUCT_VALIDATION.md) | [Pitch deck](docs/pitch-deck.md)
 
+## Watch it / Try it
+
+[Demo video](https://youtu.be/-H_AL4D6Am8)
+
+**Please select 1080p quality when watching the video for the best
+viewing experience.**
+
+Live app: [proof-api-1028999311218.us-central1.run.app](https://proof-api-1028999311218.us-central1.run.app/)
+
 ## The problem
 
 Someone sends you a screenshot saying they paid. You look at it. It looks
